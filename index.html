@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>3D Runner</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #111; font-family: sans-serif; user-select: none; touch-action: none; }
+        #ui { position: absolute; top: 20px; left: 20px; color: white; font-size: 22px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); z-index: 10; line-height: 1.5; }
+        #gameover { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #ff3333; font-size: 42px; font-weight: bold; text-align: center; text-shadow: 3px 3px 6px rgba(0,0,0,0.9); display: none; z-index: 10; }
+        #restart-btn { margin-top: 20px; padding: 12px 25px; font-size: 20px; background: #fff; border: none; cursor: pointer; border-radius: 5px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+    <div id="ui">
+        Монеты: <span id="score">0</span><br>
+        Рекорд: <span id="highscore">0</span>
+    </div>
+    
+    <div id="gameover">
+        ИГРА ОКОНЧЕНА
+        <br>
+        <button id="restart-btn" onclick="resetGame()">Играть снова</button>
+    </div>
+
+    <script>
+        let scene, camera, renderer, player;
+        let tracks = [-4, 0, 4]; 
+        let currentTrack = 1;    
+        let obstacles = [], coins = [], environmentObjects = [];
+        let score = 0, highscore = localStorage.getItem("subway_highscore") || 0, speed = 0.3;
+        let isGameOver = false, isJumping = false, jumpVelocity = 0;
+        const gravity = 0.015;
+        let touchStartX = 0, touchStartY = 0;
+
+        document.getElementById("highscore").innerText = highscore;
+
+        init();
+        animate();
+
+        function init() {
+            if (typeof THREE === 'undefined') return;
+
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x3a9ad9); 
+            scene.fog = new THREE.FogExp2(0x3a9ad9, 0.015);
+
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 6, 10); 
+            camera.lookAt(0, 2, -5);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            document.body.appendChild(renderer.domElement);
+
+            scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            dirLight.position.set(10, 20, 10);
+            dirLight.castShadow = true;
+            scene.add(dirLight);
+
+            const ground = new THREE.Mesh(new THREE.PlaneGeometry(20, 1000), new THREE.MeshStandardMaterial({ color: 0x444444 }));
+            ground.rotation.x = -Math.PI / 2;
+            ground.position.z = -450;
+            ground.receiveShadow = true;
+            scene.add(ground);
+
+            for (let t of tracks) {
+                const rail1 = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.08, 1000), new THREE.MeshStandardMaterial({ color: 0x777777, metalness: 0.9 }));
+                rail1.position.set(t - 0.7, 0.04, -450);
+                const rail2 = rail1.clone();
+                rail2.position.x = t + 0.7;
+                scene.add(rail1, rail2);
+            }
+
+            player = new THREE.Group();
+            const body = new THREE.Mesh(new THREE.BoxGeometry(1, 1.2, 0.6), new THREE.MeshStandardMaterial({ color: 0x00d2ff }));
+            body.position.y = 1;
+            body.castShadow = true;
+            player.add(body);
+            
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.35, 16, 16), new THREE.MeshStandardMaterial({ color: 0xffe0bd }));
+            head.position.y = 1.8;
+            player.add(head);
+
+            const cap = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.1, 0.6), new THREE.MeshStandardMaterial({ color: 0xff3366 }));
+            cap.position.set(0, 2.1, -0.1);
+            player.add(cap);
+
+            player.position.set(tracks[currentTrack], 0, 0);
+            scene.add(player);
+
+            for (let i = 0; i < 25; i++) spawnEnvironment(-i * 35);
+
+            window.addEventListener('keydown', handleKeyDown);
+            window.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; }, {passive: true});
+            window.addEventListener('touchend', handleTouchEnd, {passive: true});
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        function spawnObstacle(zPos) {
+            const trackX = tracks[Math.floor(Math.random() * 3)];
+            if (Math.random() > 0.4) {
+                const train = new THREE.Mesh(new THREE.BoxGeometry(2.6, 3.2, 9), new THREE.MeshStandardMaterial({ color: 0xd93838, roughness: 0.3 }));
+                train.position.set(trackX, 1.6, zPos);
+                train.castShadow = true;
+                scene.add(train);
+                obstacles.push(train);
+            } else {
+                const barrier = new THREE.Mesh(new THREE.BoxGeometry(3, 1.3, 0.5), new THREE.MeshStandardMaterial({ color: 0xffcc00 }));
+                barrier.position.set(trackX, 0.65, zPos);
+                barrier.castShadow = true;
+                scene.add(barrier);
+                obstacles.push(barrier);
+            }
+            spawnCoin(trackX, zPos - 5);
+        }
+
+        function spawnCoin(x, z) {
+            const coin = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.1, 16), new THREE.MeshStandardMaterial({ color: 0xffea00, metalness: 0.8 }));
+            coin.rotation.x = Math.PI / 2;
+            coin.position.set(x, 1.3, z);
+            scene.add(coin);
+            coins.push(coin);
+        }
+
+        function spawnEnvironment(zPos) {
+            const leftPole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 9), new THREE.MeshStandardMaterial({ color: 0x222222 }));
+            leftPole.position.set(-8, 4.5, zPos);
+            const rightPole = leftPole.clone();
+            rightPole.position.x = 8;
+            scene.add(leftPole, rightPole);
+            environmentObjects.push(leftPole, rightPole);
+        }
+
+        function handleKeyDown(e) {
+            if (isGameOver) return;
+            if (e.key === "ArrowLeft") moveLane(-1);
+            if (e.key === "ArrowRight") moveLane(1);
+            if (e.key === "ArrowUp") jump();
+        }
+
+        function handleTouchEnd(e) {
+            if (isGameOver) return;
+            let diffX = e.changedTouches[0].clientX - touchStartX;
+            let diffY = e.changedTouches[0].clientY - touchStartY;
+            if (Math.abs(diffX) > Math.abs(diffY)) {
+                if (diffX > 40) moveLane(1);
+                if (diffX < -40) moveLane(-1);
+            } else {
+                if (diffY < -40) jump();
+            }
+        }
+
+        function moveLane(dir) {
+            let next = currentTrack + dir;
+            if (next >= 0 && next <= 2) currentTrack = next;
+        }
+
+        function jump() {
+            if (!isJumping) { isJumping = true; jumpVelocity = 0.28; }
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            if (!isGameOver && typeof THREE !== 'undefined') {
+                player.position.x = THREE.MathUtils.lerp(player.position.x, tracks[currentTrack], 0.25);
+                if (isJumping) {
+                    player.position.y += jumpVelocity;
+                    jumpVelocity -= gravity;
+                    if (player.position.y <= 0) { player.position.y = 0; isJumping = false; }
+                }
+                speed += 0.00003;
+
+                for (let i = obstacles.length - 1; i >= 0; i--) {
+                    let obs = obstacles[i];
+                    obs.position.z += speed;
+                    if (new THREE.Box3().setFromObject(player).intersectsBox(new THREE.Box3().setFromObject(obs))) gameOver();
+                    if (obs.position.z > 15) { scene.remove(obs); obstacles.splice(i, 1); }
+                }
+
+                for (let i = coins.length - 1; i >= 0; i--) {
+                    let coin = coins[i];
+                    coin.position.z += speed;
+                    coin.rotation.z += 0.04;
+                    if (new THREE.Box3().setFromObject(player).intersectsBox(new THREE.Box3().setFromObject(coin))) {
+                        score += 1;
+                        document.getElementById("score").innerText = score;
+                        if (score > highscore) {
+                            highscore = score;
+                            document.getElementById("highscore").innerText = highscore;
+                            localStorage.setItem("subway_highscore", highscore);
+                        }
+                        scene.remove(coin);
+                        coins.splice(i, 1);
+                        continue;
+                    }
+                    if (coin.position.z > 15) { scene.remove(coin); coins.splice(i, 1); }
+                }
+
+                for (let obj of environmentObjects) {
+                    obj.position.z += speed;
+                    if (obj.position.z > 20) obj.position.z = -650;
+                }
+
+                if (obstacles.length < 12) {
+                    let maxZ = obstacles.length > 0 ? Math.min(...obstacles.map(o => o.position.z)) : -100;
+                    spawnObstacle(maxZ - (Math.random() * 25 + 35));
+                }
+            }
+            if (typeof THREE !== 'undefined' && renderer) renderer.render(scene, camera);
+        }
+
+        function gameOver() { isGameOver = true; document.getElementById("gameover").style.display = "block"; }
+
+        function resetGame() {
+            obstacles.forEach(o => scene.remove(o));
+            coins.forEach(c => scene.remove(c));
+
+obstacles = []; coins = []; score = 0; speed = 0.3; currentTrack = 1;
+player.position.set(tracks[currentTrack], 0, 0);
+isJumping = false;
+document.getElementById("score").innerText = score;
+document.getElementById("gameover").style.display = "none";
+isGameOver = false;
+}
+function onWindowResize() {
+if (typeof THREE === 'undefined' || !camera) return;
+camera.aspect = window.innerWidth / window.innerHeight;
+camera.updateProjectionMatrix();
+renderer.setSize(window.innerWidth, window.innerHeight);
+}
+</script>
