@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>3D Runner</title>
+    <title>3D Roblox Noob Runner</title>
     <style>
         body { margin: 0; overflow: hidden; background-color: #111; font-family: sans-serif; user-select: none; touch-action: none; }
         #ui { position: absolute; top: 20px; left: 20px; color: white; font-size: 22px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); z-index: 10; line-height: 1.5; }
@@ -32,7 +32,11 @@
         let obstacles = [], coins = [], environmentObjects = [];
         let score = 0, highscore = localStorage.getItem("subway_highscore") || 0, speed = 0.3;
         let isGameOver = false, isJumping = false, jumpVelocity = 0;
-        const gravity = 0.015;
+        
+        // Измененная физика для высокого и затяжного прыжка
+        const gravity = 0.012; 
+        const initialJumpForce = 0.35;
+
         let touchStartX = 0, touchStartY = 0;
 
         document.getElementById("highscore").innerText = highscore;
@@ -48,7 +52,7 @@
             scene.fog = new THREE.FogExp2(0x3a9ad9, 0.015);
 
             camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 6, 10); 
+            camera.position.set(0, 7, 11); 
             camera.lookAt(0, 2, -5);
 
             renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -76,19 +80,46 @@
                 scene.add(rail1, rail2);
             }
 
+            // --- СОЗДАНИЕ НУБА ИЗ ROBLOX ---
             player = new THREE.Group();
-            const body = new THREE.Mesh(new THREE.BoxGeometry(1, 1.2, 0.6), new THREE.MeshStandardMaterial({ color: 0x00d2ff }));
-            body.position.y = 1;
-            body.castShadow = true;
-            player.add(body);
             
-            const head = new THREE.Mesh(new THREE.SphereGeometry(0.35, 16, 16), new THREE.MeshStandardMaterial({ color: 0xffe0bd }));
-            head.position.y = 1.8;
+            const yellowMat = new THREE.MeshStandardMaterial({ color: 0xffcd03, roughness: 0.5 }); // Голова и руки
+            const blueMat = new THREE.MeshStandardMaterial({ color: 0x00a2ff, roughness: 0.5 });   // Торс
+            const greenMat = new THREE.MeshStandardMaterial({ color: 0x287f46, roughness: 0.5 });  // Ноги
+
+            // Торс
+            const torso = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.9, 0.45), blueMat);
+            torso.position.y = 1.05;
+            torso.castShadow = true;
+            player.add(torso);
+
+            // Голова
+            const head = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.45, 0.45), yellowMat);
+            head.position.y = 1.725;
+            head.castShadow = true;
             player.add(head);
 
-            const cap = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.1, 0.6), new THREE.MeshStandardMaterial({ color: 0xff3366 }));
-            cap.position.set(0, 2.1, -0.1);
-            player.add(cap);
+            // Левая рука
+            const leftArm = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.9, 0.22), yellowMat);
+            leftArm.position.set(-0.56, 1.05, 0);
+            leftArm.castShadow = true;
+            player.add(leftArm);
+
+            // Правая рука
+            const rightArm = leftArm.clone();
+            rightArm.position.x = 0.56;
+            player.add(rightArm);
+
+            // Левая нога
+            const leftLeg = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.6, 0.42), greenMat);
+            leftLeg.position.set(-0.22, 0.3, 0);
+            leftLeg.castShadow = true;
+            player.add(leftLeg);
+
+            // Правая нога
+            const rightLeg = leftLeg.clone();
+            rightLeg.position.x = 0.22;
+            player.add(rightLeg);
 
             player.position.set(tracks[currentTrack], 0, 0);
             scene.add(player);
@@ -96,7 +127,7 @@
             for (let i = 0; i < 25; i++) spawnEnvironment(-i * 35);
 
             window.addEventListener('keydown', handleKeyDown);
-            window.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; }, {passive: true});
+            window.addEventListener('touchstart', e => { touchStartX = e.touches.clientX; touchStartY = e.touches.clientY; }, {passive: true});
             window.addEventListener('touchend', handleTouchEnd, {passive: true});
             window.addEventListener('resize', onWindowResize);
         }
@@ -104,8 +135,8 @@
         function spawnObstacle(zPos) {
             const trackX = tracks[Math.floor(Math.random() * 3)];
             if (Math.random() > 0.4) {
-                const train = new THREE.Mesh(new THREE.BoxGeometry(2.6, 3.2, 9), new THREE.MeshStandardMaterial({ color: 0xd93838, roughness: 0.3 }));
-                train.position.set(trackX, 1.6, zPos);
+                const train = new THREE.Mesh(new THREE.BoxGeometry(2.6, 3.5, 9), new THREE.MeshStandardMaterial({ color: 0xd93838, roughness: 0.3 }));
+                train.position.set(trackX, 1.75, zPos);
                 train.castShadow = true;
                 scene.add(train);
                 obstacles.push(train);
@@ -145,8 +176,8 @@
 
         function handleTouchEnd(e) {
             if (isGameOver) return;
-            let diffX = e.changedTouches[0].clientX - touchStartX;
-            let diffY = e.changedTouches[0].clientY - touchStartY;
+            let diffX = e.changedTouches.clientX - touchStartX;
+            let diffY = e.changedTouches.clientY - touchStartY;
             if (Math.abs(diffX) > Math.abs(diffY)) {
                 if (diffX > 40) moveLane(1);
                 if (diffX < -40) moveLane(-1);
@@ -161,13 +192,14 @@
         }
 
         function jump() {
-            if (!isJumping) { isJumping = true; jumpVelocity = 0.28; }
+            if (!isJumping) { isJumping = true; jumpVelocity = initialJumpForce; }
         }
 
         function animate() {
             requestAnimationFrame(animate);
             if (!isGameOver && typeof THREE !== 'undefined') {
                 player.position.x = THREE.MathUtils.lerp(player.position.x, tracks[currentTrack], 0.25);
+                
                 if (isJumping) {
                     player.position.y += jumpVelocity;
                     jumpVelocity -= gravity;
@@ -192,34 +224,30 @@
                         if (score > highscore) {
                             highscore = score;
                             document.getElementById("highscore").innerText = highscore;
-                            localStorage.setItem("subway_highscore", highscore);
-                        }
-                        scene.remove(coin);
-                        coins.splice(i, 1);
-                        continue;
-                    }
-                    if (coin.position.z > 15) { scene.remove(coin); coins.splice(i, 1); }
-                }
 
-                for (let obj of environmentObjects) {
-                    obj.position.z += speed;
-                    if (obj.position.z > 20) obj.position.z = -650;
-                }
-
-                if (obstacles.length < 12) {
-                    let maxZ = obstacles.length > 0 ? Math.min(...obstacles.map(o => o.position.z)) : -100;
-                    spawnObstacle(maxZ - (Math.random() * 25 + 35));
-                }
-            }
-            if (typeof THREE !== 'undefined' && renderer) renderer.render(scene, camera);
-        }
-
-        function gameOver() { isGameOver = true; document.getElementById("gameover").style.display = "block"; }
-
-        function resetGame() {
-            obstacles.forEach(o => scene.remove(o));
-            coins.forEach(c => scene.remove(c));
-
+localStorage.setItem("subway_highscore", highscore);
+}
+scene.remove(coin);
+coins.splice(i, 1);
+continue;
+}
+if (coin.position.z > 15) { scene.remove(coin); coins.splice(i, 1); }
+}
+for (let obj of environmentObjects) {
+obj.position.z += speed;
+if (obj.position.z > 20) obj.position.z = -650;
+}
+if (obstacles.length < 12) {
+let maxZ = obstacles.length > 0 ? Math.min(...obstacles.map(o => o.position.z)) : -100;
+spawnObstacle(maxZ - (Math.random() * 25 + 35));
+}
+}
+if (typeof THREE !== 'undefined' && renderer) renderer.render(scene, camera);
+}
+function gameOver() { isGameOver = true; document.getElementById("gameover").style.display = "block"; }
+function resetGame() {
+obstacles.forEach(o => scene.remove(o));
+coins.forEach(c => scene.remove(c));
 obstacles = []; coins = []; score = 0; speed = 0.3; currentTrack = 1;
 player.position.set(tracks[currentTrack], 0, 0);
 isJumping = false;
