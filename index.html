@@ -96,7 +96,7 @@
         let scene, camera, renderer, player;
         let leftArm, rightArm, leftLeg, rightLeg, torso, head;
         let tracks = [-4, 0, 4]; 
-        let currentTrack = 1, targetTrackX = 0;    
+        let currentTrack = 1;    
         let obstacles = [], coins = [], powerups = [], environmentObjects = [];
         
         let score = 0, coinsCollectedThisRun = 0;
@@ -108,15 +108,15 @@
         
         let isJumping = false, jumpVelocity = 0;
         let isDucking = false, duckTimer = 0;
-        const gravity = 0.018; 
-        const jumpForce = 0.42;
+        const gravity = 0.014; 
+        const jumpForce = 0.38;
         let animTime = 0;
 
         let respawnCost = 1;
         let invincibilityFrames = 0;
         let activePowerup = null, powerupTime = 0; 
         
-        let touchStartX = 0, touchStartY = 0;
+        let lastTouchX = 0, lastTouchY = 0, isTouching = false;
 
         document.getElementById("menu-highscore").innerText = highscore;
         document.getElementById("ui-total-coins").innerText = totalCoins;
@@ -182,7 +182,7 @@
             ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(32,32,16,0,Math.PI); ctx.stroke(); 
             const faceTex = new THREE.CanvasTexture(canvas);
 
-head.material = [yellowMat, yellowMat, yellowMat, yellowMat, new THREE.MeshStandardMaterial({map: faceTex}), yellowMat];
+head.material = [yellowMat, yellowMat, yellowMat, yellowMat, yellowMat, new THREE.MeshStandardMaterial({map: faceTex})];
 const armGeo = new THREE.BoxGeometry(0.25, 0.9, 0.25); armGeo.translate(0, -0.45, 0);
 leftArm = new THREE.Mesh(armGeo, yellowMat); leftArm.position.set(-0.58, 0.45, 0); torso.add(leftArm);
 rightArm = new THREE.Mesh(armGeo, yellowMat); rightArm.position.set(0.58, 0.45, 0); torso.add(rightArm);
@@ -193,9 +193,9 @@ player.position.set(tracks[currentTrack], 0, 0);
 scene.add(player);
 for (let i = 0; i < 25; i++) spawnEnvironment(-i * 35);
 window.addEventListener('keydown', handleKeyDown);
-window.addEventListener('touchstart', e => { touchStartX = e.touches.clientX; touchStartY = e.touches.clientY; }, {passive: true});
-window.addEventListener('touchmove', e => { if(gameState === "PLAYING") e.preventDefault(); }, {passive: false});
-window.addEventListener('touchend', handleTouchEnd, {passive: true});
+window.addEventListener('touchstart', handleTouchStart, {passive: false});
+window.addEventListener('touchmove', handleTouchMove, {passive: false});
+window.addEventListener('touchend', () => { isTouching = false; }, {passive: true});
 window.addEventListener('resize', onWindowResize);
 }
 function spawnObstacle(zPos) {
@@ -289,16 +289,28 @@ if (e.key === "ArrowRight") moveLane(1);
 if (e.key === "ArrowUp") jump();
 if (e.key === "ArrowDown") duck();
 }
-function handleTouchEnd(e) {
-if (gameState !== "PLAYING") return;
-let diffX = e.changedTouches.clientX - touchStartX;
-let diffY = e.changedTouches.clientY - touchStartY;
-if (Math.abs(diffX) > Math.abs(diffY)) {
-if (diffX > 25) moveLane(1);
-if (diffX < -25) moveLane(-1);
-} else {
-if (diffY < -35) jump();
-if (diffY > 35) duck();
+function handleTouchStart(e) {
+e.preventDefault();
+let touch = e.touches[0];
+lastTouchX = touch.clientX;
+lastTouchY = touch.clientY;
+isTouching = true;
+}
+function handleTouchMove(e) {
+e.preventDefault();
+if (gameState !== "PLAYING" || !isTouching) return;
+let touch = e.touches[0];
+let diffX = touch.clientX - lastTouchX;
+let diffY = touch.clientY - lastTouchY;
+if (Math.abs(diffX) > 30) {
+if (diffX > 0) moveLane(1);
+else moveLane(-1);
+lastTouchX = touch.clientX;
+}
+if (Math.abs(diffY) > 40) {
+if (diffY < 0) jump();
+else duck();
+lastTouchY = touch.clientY;
 }
 }
 function moveLane(dir) {
