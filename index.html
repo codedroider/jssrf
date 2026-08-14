@@ -125,7 +125,7 @@
         let invincibilityFrames = 0;
         let activePowerup = null, powerupTime = 0; 
         
-        let lastTouchX = 0, lastTouchY = 0, isTouching = false;
+        let touchStartX = 0, touchStartY = 0;
 
         document.getElementById("menu-highscore").innerText = highscore;
         document.getElementById("ui-total-coins").innerText = totalCoins;
@@ -202,9 +202,9 @@ player.position.set(tracks[currentTrack], 0, 0);
 scene.add(player);
 for (let i = 0; i < 25; i++) spawnEnvironment(-i * 35);
 window.addEventListener('keydown', handleKeyDown);
-window.addEventListener('touchstart', handleTouchStart, {passive: false});
+window.addEventListener('touchstart', handleTouchStart, {passive: true});
 window.addEventListener('touchmove', handleTouchMove, {passive: false});
-window.addEventListener('touchend', () => { isTouching = false; }, {passive: true});
+window.addEventListener('touchend', handleTouchEnd, {passive: true});
 window.addEventListener('resize', onWindowResize);
 }
 function spawnObstacle(zPos) {
@@ -299,28 +299,29 @@ if (e.key === "ArrowUp") jump();
 if (e.key === "ArrowDown") duck();
 }
 function handleTouchStart(e) {
-if (gameState === "MENU" || gameState === "GAMEOVER") return;
-e.preventDefault();
+if (gameState !== "PLAYING") return;
 let touch = e.touches[0];
-lastTouchX = touch.clientX;
-lastTouchY = touch.clientY;
-isTouching = true;
+touchStartX = touch.clientX;
+touchStartY = touch.clientY;
 }
 function handleTouchMove(e) {
-if (gameState !== "PLAYING" || !isTouching) return;
-e.preventDefault();
-let touch = e.touches[0];
-let diffX = touch.clientX - lastTouchX;
-let diffY = touch.clientY - lastTouchY;
+if (gameState === "PLAYING") e.preventDefault();
+}
+function handleTouchEnd(e) {
+if (gameState !== "PLAYING") return;
+let touch = e.changedTouches[0];
+let diffX = touch.clientX - touchStartX;
+let diffY = touch.clientY - touchStartY;
+if (Math.abs(diffX) > Math.abs(diffY)) {
 if (Math.abs(diffX) > 30) {
 if (diffX > 0) moveLane(1);
 else moveLane(-1);
-lastTouchX = touch.clientX;
 }
-if (Math.abs(diffY) > 40) {
+} else {
+if (Math.abs(diffY) > 30) {
 if (diffY < 0) jump();
 else duck();
-lastTouchY = touch.clientY;
+}
 }
 }
 function moveLane(dir) {
