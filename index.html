@@ -10,7 +10,7 @@
         #menu-screen { background: linear-gradient(to bottom, #3a9ad9, #1e4f6e); }
         #game-ui { position: absolute; top: 20px; left: 20px; color: white; font-size: 20px; z-index: 10; line-height: 1.4; pointer-events: none; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); }
         #active-powerup { color: #ffeb3b; font-size: 18px; margin-top: 5px; display: none; }
-        #pause-btn { position: absolute; top: 20px; right: 20px; width: 50px; height: 50px; background: #fff; border: 4px solid #000; border-radius: 10px; font-size: 24px; font-weight: bold; cursor: pointer; z-index: 50; display: none; align-items: center; justify-content: center; }
+        #pause-btn { position: absolute; top: 20px; right: 20px; width: 50px; height: 50px; background: #fff; border: 4px solid #000; border-radius: 10px; font-size: 24px; font-weight: bold; cursor: pointer; z-index: 50; display: none; align-items: center; justify-content: center; color: black; }
         .btn { padding: 15px 40px; font-size: 24px; background: #ffcd03; color: black; border: 4px solid #000; border-radius: 12px; cursor: pointer; font-weight: bold; margin: 10px; box-shadow: 0 6px #b59102; transition: 0.1s; }
         .btn:active { transform: translateY(4px); box-shadow: 0 2px #b59102; }
         h1 { font-size: 48px; text-shadow: 4px 4px #00a2ff; margin-bottom: 5px; text-align: center; }
@@ -52,9 +52,18 @@
     <div id="invincible-flash"></div>
 
     <script>
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let audioCtx = null;
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
         function playSound(type) {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
+            if (!audioCtx) return;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.connect(gain);
@@ -179,9 +188,9 @@
             const ctx = canvas.getContext('2d');
             ctx.fillStyle = '#ffcd03'; ctx.fillRect(0,0,64,64);
             ctx.fillStyle = '#000000'; ctx.fillRect(14,20,8,12); ctx.fillRect(42,20,8,12); 
-            ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(32,32,16,0,Math.PI); ctx.stroke(); 
-            const faceTex = new THREE.CanvasTexture(canvas);
 
+ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(32,32,16,0,Math.PI); ctx.stroke();
+const faceTex = new THREE.CanvasTexture(canvas);
 head.material = [yellowMat, yellowMat, yellowMat, yellowMat, yellowMat, new THREE.MeshStandardMaterial({map: faceTex})];
 const armGeo = new THREE.BoxGeometry(0.25, 0.9, 0.25); armGeo.translate(0, -0.45, 0);
 leftArm = new THREE.Mesh(armGeo, yellowMat); leftArm.position.set(-0.58, 0.45, 0); torso.add(leftArm);
@@ -290,6 +299,7 @@ if (e.key === "ArrowUp") jump();
 if (e.key === "ArrowDown") duck();
 }
 function handleTouchStart(e) {
+if (gameState === "MENU") return;
 e.preventDefault();
 let touch = e.touches[0];
 lastTouchX = touch.clientX;
@@ -297,8 +307,8 @@ lastTouchY = touch.clientY;
 isTouching = true;
 }
 function handleTouchMove(e) {
-e.preventDefault();
 if (gameState !== "PLAYING" || !isTouching) return;
+e.preventDefault();
 let touch = e.touches[0];
 let diffX = touch.clientX - lastTouchX;
 let diffY = touch.clientY - lastTouchY;
@@ -354,6 +364,7 @@ return 3.5;
 return 0;
 }
 function startGame() {
+initAudio();
 gameState = "PLAYING";
 document.getElementById("menu-screen").style.display = "none";
 document.getElementById("pause-btn").style.display = "flex";
