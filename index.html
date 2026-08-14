@@ -27,15 +27,17 @@
 
     <script>
         let scene, camera, renderer, player;
+        let leftArm, rightArm, leftLeg, rightLeg, torso, head;
         let tracks = [-4, 0, 4]; 
         let currentTrack = 1;    
         let obstacles = [], coins = [], environmentObjects = [];
         let score = 0, highscore = localStorage.getItem("subway_highscore") || 0, speed = 0.3;
         let isGameOver = false, isJumping = false, jumpVelocity = 0;
+        let isDucking = false, duckTimer = 0;
         
-        // Измененная физика для высокого и затяжного прыжка
         const gravity = 0.012; 
         const initialJumpForce = 0.35;
+        let animTime = 0;
 
         let touchStartX = 0, touchStartY = 0;
 
@@ -80,46 +82,47 @@
                 scene.add(rail1, rail2);
             }
 
-            // --- СОЗДАНИЕ НУБА ИЗ ROBLOX ---
             player = new THREE.Group();
             
-            const yellowMat = new THREE.MeshStandardMaterial({ color: 0xffcd03, roughness: 0.5 }); // Голова и руки
-            const blueMat = new THREE.MeshStandardMaterial({ color: 0x00a2ff, roughness: 0.5 });   // Торс
-            const greenMat = new THREE.MeshStandardMaterial({ color: 0x287f46, roughness: 0.5 });  // Ноги
+            const yellowMat = new THREE.MeshStandardMaterial({ color: 0xffcd03, roughness: 0.5 }); 
+            const blueMat = new THREE.MeshStandardMaterial({ color: 0x00a2ff, roughness: 0.5 });   
+            const greenMat = new THREE.MeshStandardMaterial({ color: 0x287f46, roughness: 0.5 });  
 
-            // Торс
-            const torso = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.9, 0.45), blueMat);
+            torso = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.9, 0.45), blueMat);
             torso.position.y = 1.05;
             torso.castShadow = true;
             player.add(torso);
 
-            // Голова
-            const head = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.45, 0.45), yellowMat);
-            head.position.y = 1.725;
+            head = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.45, 0.45), yellowMat);
+            head.position.set(0, 0.675, 0);
             head.castShadow = true;
-            player.add(head);
+            torso.add(head);
 
-            // Левая рука
-            const leftArm = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.9, 0.22), yellowMat);
-            leftArm.position.set(-0.56, 1.05, 0);
+            const armGeo = new THREE.BoxGeometry(0.22, 0.9, 0.22);
+            armGeo.translate(0, -0.45, 0); // Сдвиг точки вращения к плечу
+
+            leftArm = new THREE.Mesh(armGeo, yellowMat);
+            leftArm.position.set(-0.56, 0.45, 0);
             leftArm.castShadow = true;
-            player.add(leftArm);
+            torso.add(leftArm);
 
-            // Правая рука
-            const rightArm = leftArm.clone();
-            rightArm.position.x = 0.56;
-            player.add(rightArm);
+            rightArm = new THREE.Mesh(armGeo, yellowMat);
+            rightArm.position.set(0.56, 0.45, 0);
+            rightArm.castShadow = true;
+            torso.add(rightArm);
 
-            // Левая нога
-            const leftLeg = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.6, 0.42), greenMat);
-            leftLeg.position.set(-0.22, 0.3, 0);
+            const legGeo = new THREE.BoxGeometry(0.42, 0.6, 0.42);
+            legGeo.translate(0, -0.3, 0);
+
+            leftLeg = new THREE.Mesh(legGeo, greenMat);
+            leftLeg.position.set(-0.22, -0.45, 0);
             leftLeg.castShadow = true;
-            player.add(leftLeg);
+            torso.add(leftLeg);
 
-            // Правая нога
-            const rightLeg = leftLeg.clone();
-            rightLeg.position.x = 0.22;
-            player.add(rightLeg);
+            rightLeg = new THREE.Mesh(legGeo, greenMat);
+            rightLeg.position.set(0.22, -0.45, 0);
+            rightLeg.castShadow = true;
+            torso.add(rightLeg);
 
             player.position.set(tracks[currentTrack], 0, 0);
             scene.add(player);
@@ -127,7 +130,11 @@
             for (let i = 0; i < 25; i++) spawnEnvironment(-i * 35);
 
             window.addEventListener('keydown', handleKeyDown);
-            window.addEventListener('touchstart', e => { touchStartX = e.touches.clientX; touchStartY = e.touches.clientY; }, {passive: true});
+            window.addEventListener('touchstart', e => { 
+                touchStartX = e.touches[0].clientX; 
+                touchStartY = e.touches[0].clientY; 
+            }, {passive: true});
+            window.addEventListener('touchmove', e => { e.preventDefault(); }, {passive: false}); 
             window.addEventListener('touchend', handleTouchEnd, {passive: true});
             window.addEventListener('resize', onWindowResize);
         }
@@ -141,8 +148,8 @@
                 scene.add(train);
                 obstacles.push(train);
             } else {
-                const barrier = new THREE.Mesh(new THREE.BoxGeometry(3, 1.3, 0.5), new THREE.MeshStandardMaterial({ color: 0xffcc00 }));
-                barrier.position.set(trackX, 0.65, zPos);
+                const barrier = new THREE.Mesh(new THREE.BoxGeometry(3, 0.8, 0.5), new THREE.MeshStandardMaterial({ color: 0xffcc00 }));
+                barrier.position.set(trackX, 1.6, zPos);
                 barrier.castShadow = true;
                 scene.add(barrier);
                 obstacles.push(barrier);
@@ -172,17 +179,20 @@
             if (e.key === "ArrowLeft") moveLane(-1);
             if (e.key === "ArrowRight") moveLane(1);
             if (e.key === "ArrowUp") jump();
+            if (e.key === "ArrowDown") duck();
         }
 
         function handleTouchEnd(e) {
             if (isGameOver) return;
-            let diffX = e.changedTouches.clientX - touchStartX;
-            let diffY = e.changedTouches.clientY - touchStartY;
+            let diffX = e.changedTouches[0].clientX - touchStartX;
+            let diffY = e.changedTouches[0].clientY - touchStartY;
+            
             if (Math.abs(diffX) > Math.abs(diffY)) {
-                if (diffX > 40) moveLane(1);
-                if (diffX < -40) moveLane(-1);
+                if (diffX > 30) moveLane(1);
+                if (diffX < -30) moveLane(-1);
             } else {
-                if (diffY < -40) jump();
+                if (diffY < -30) jump();
+                if (diffY > 30) duck();
             }
         }
 
@@ -192,7 +202,18 @@
         }
 
         function jump() {
-            if (!isJumping) { isJumping = true; jumpVelocity = initialJumpForce; }
+            if (!isJumping && !isDucking) { isJumping = true; jumpVelocity = initialJumpForce; }
+        }
+
+        function duck() {
+            if (!isDucking) {
+                if (isJumping) {
+                    player.position.y = 0;
+                    isJumping = false;
+                }
+                isDucking = true;
+                duckTimer = 25;
+            }
         }
 
         function animate() {
@@ -201,30 +222,54 @@
                 player.position.x = THREE.MathUtils.lerp(player.position.x, tracks[currentTrack], 0.25);
                 
                 if (isJumping) {
-                    player.position.y += jumpVelocity;
-                    jumpVelocity -= gravity;
-                    if (player.position.y <= 0) { player.position.y = 0; isJumping = false; }
+
+player.position.y += jumpVelocity;
+jumpVelocity -= gravity;
+if (player.position.y <= 0) { player.position.y = 0; isJumping = false; }
                 }
-                speed += 0.00003;
-
-                for (let i = obstacles.length - 1; i >= 0; i--) {
-                    let obs = obstacles[i];
-                    obs.position.z += speed;
-                    if (new THREE.Box3().setFromObject(player).intersectsBox(new THREE.Box3().setFromObject(obs))) gameOver();
-                    if (obs.position.z > 15) { scene.remove(obs); obstacles.splice(i, 1); }
-                }
-
-                for (let i = coins.length - 1; i >= 0; i--) {
-                    let coin = coins[i];
-                    coin.position.z += speed;
-                    coin.rotation.z += 0.04;
-                    if (new THREE.Box3().setFromObject(player).intersectsBox(new THREE.Box3().setFromObject(coin))) {
-                        score += 1;
-                        document.getElementById("score").innerText = score;
-                        if (score > highscore) {
-                            highscore = score;
-                            document.getElementById("highscore").innerText = highscore;
-
+if (isDucking) {
+torso.scale.y = THREE.MathUtils.lerp(torso.scale.y, 0.4, 0.3);
+torso.position.y = THREE.MathUtils.lerp(torso.position.y, 0.6, 0.3);
+duckTimer--;
+if (duckTimer <= 0) isDucking = false;
+} else {
+torso.scale.y = THREE.MathUtils.lerp(torso.scale.y, 1.0, 0.2);
+torso.position.y = THREE.MathUtils.lerp(torso.position.y, 1.05, 0.2);
+}
+if (!isGameOver) {
+if (isJumping) {
+leftLeg.rotation.x = THREE.MathUtils.lerp(leftLeg.rotation.x, -0.5, 0.2);
+rightLeg.rotation.x = THREE.MathUtils.lerp(rightLeg.rotation.x, -0.5, 0.2);
+leftArm.rotation.x = THREE.MathUtils.lerp(leftArm.rotation.x, Math.PI, 0.2);
+rightArm.rotation.x = THREE.MathUtils.lerp(rightArm.rotation.x, Math.PI, 0.2);
+} else if (isDucking) {
+leftLeg.rotation.x = -1.2; rightLeg.rotation.x = -1.2;
+leftArm.rotation.x = 0.5; rightArm.rotation.x = 0.5;
+} else {
+animTime += speed * 0.5;
+leftLeg.rotation.x = Math.sin(animTime) * 0.8;
+rightLeg.rotation.x = -Math.sin(animTime) * 0.8;
+leftArm.rotation.x = -Math.sin(animTime) * 0.8;
+rightArm.rotation.x = Math.sin(animTime) * 0.8;
+}
+}
+speed += 0.00003;
+for (let i = obstacles.length - 1; i >= 0; i--) {
+let obs = obstacles[i];
+obs.position.z += speed;
+if (new THREE.Box3().setFromObject(player).intersectsBox(new THREE.Box3().setFromObject(obs))) gameOver();
+if (obs.position.z > 15) { scene.remove(obs); obstacles.splice(i, 1); }
+}
+for (let i = coins.length - 1; i >= 0; i--) {
+let coin = coins[i];
+coin.position.z += speed;
+coin.rotation.z += 0.04;
+if (new THREE.Box3().setFromObject(player).intersectsBox(new THREE.Box3().setFromObject(coin))) {
+score += 1;
+document.getElementById("score").innerText = score;
+if (score > highscore) {
+highscore = score;
+document.getElementById("highscore").innerText = highscore;
 localStorage.setItem("subway_highscore", highscore);
 }
 scene.remove(coin);
@@ -250,7 +295,7 @@ obstacles.forEach(o => scene.remove(o));
 coins.forEach(c => scene.remove(c));
 obstacles = []; coins = []; score = 0; speed = 0.3; currentTrack = 1;
 player.position.set(tracks[currentTrack], 0, 0);
-isJumping = false;
+isJumping = false; isDucking = false;
 document.getElementById("score").innerText = score;
 document.getElementById("gameover").style.display = "none";
 isGameOver = false;
