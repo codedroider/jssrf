@@ -17,10 +17,11 @@
         .score-display { font-size: 24px; margin-bottom: 20px; text-shadow: 2px 2px #000; }
         #invincible-flash { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 90; border: 0px solid rgba(255,255,255,0.5); box-sizing: border-box; }
 
-        #mod-panel { position: absolute; top: 100px; left: 20px; width: 260px; background: rgba(20, 20, 20, 0.95); border: 3px solid #ff3366; border-radius: 10px; color: white; z-index: 200; box-shadow: 0 0 15px rgba(255,51,102,0.5); font-family: sans-serif; overflow: hidden; }
-        .mod-title { font-size: 16px; font-weight: bold; color: white; background: #ff3366; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; text-transform: uppercase; font-family: 'Arial Black', sans-serif; cursor: move; }
-        .mod-minimize-btn { background: none; border: none; color: white; font-size: 18px; font-weight: bold; cursor: pointer; padding: 0 5px; line-height: 1; }
-        .mod-content { padding: 15px; }
+        #mod-panel { position: absolute; top: 100px; left: 20px; width: 280px; background: rgba(20, 20, 20, 0.95); border: 3px solid #00ffcc; border-radius: 10px; color: white; z-index: 200; box-shadow: 0 0 15px rgba(0,255,204,0.5); font-family: sans-serif; overflow: hidden; }
+        .mod-title { font-size: 16px; font-weight: bold; color: black; background: #00ffcc; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; text-transform: uppercase; font-family: 'Arial Black', sans-serif; cursor: move; }
+        .mod-minimize-btn { background: none; border: none; color: black; font-size: 18px; font-weight: bold; cursor: pointer; padding: 0 5px; line-height: 1; }
+        .mod-content { padding: 15px; max-height: 380px; overflow-y: auto; }
+        .mod-section-title { font-size: 12px; text-transform: uppercase; color: #00ffcc; margin: 10px 0 5px 0; border-bottom: 1px dashed #444; padding-bottom: 2px; }
         .mod-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 14px; font-weight: bold; }
         .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
         .switch input { opacity: 0; width: 0; height: 0; }
@@ -28,7 +29,8 @@
         .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .2s; border-radius: 50%; }
         input:checked + .slider { background-color: #4caf50; }
         input:checked + .slider:before { transform: translateX(20px); }
-        .mod-range { width: 100px; accent-color: #ff3366; }
+        .mod-range { width: 100px; accent-color: #00ffcc; }
+        .mod-color { border: 2px solid #666; background: none; cursor: pointer; width: 40px; height: 24px; padding: 0; }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
@@ -45,10 +47,11 @@
 
     <div id="mod-panel">
         <div class="mod-title" id="mod-header">
-            <span>Mod Menu V2</span>
+            <span>Mod Menu V3</span>
             <button class="mod-minimize-btn" onclick="toggleMinimize(event)">_</button>
         </div>
         <div class="mod-content" id="mod-content">
+            <div class="mod-section-title">Cheats</div>
             <div class="mod-row">
                 <span>Infinite Coins</span>
                 <label class="switch"><input type="checkbox" id="mod-inf-coins" onchange="updateMods()"><span class="slider"></span></label>
@@ -68,6 +71,20 @@
             <div class="mod-row">
                 <span>SpeedHack</span>
                 <input type="range" id="mod-speedhack" class="mod-range" min="1" max="5" step="0.5" value="1" oninput="updateMods()">
+            </div>
+
+            <div class="mod-section-title">RTX & Visuals</div>
+            <div class="mod-row">
+                <span>RTX Shadows & Specular</span>
+                <label class="switch"><input type="checkbox" id="mod-rtx" onchange="updateMods()"><span class="slider"></span></label>
+            </div>
+            <div class="mod-row">
+                <span>Sky Color</span>
+                <input type="color" id="mod-sky-color" class="mod-color" value="#3a9ad9" onchange="updateMods()">
+            </div>
+            <div class="mod-row">
+                <span>RGB / Disco Sky</span>
+                <label class="switch"><input type="checkbox" id="mod-disco" onchange="updateMods()"><span class="slider"></span></label>
             </div>
         </div>
     </div>
@@ -136,31 +153,29 @@
                 gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
                 osc.start(); osc.stop(audioCtx.currentTime + 0.4);
             } else if (type === 'crash') {
-                osc.type = 'sawtooth'; osc.frequency.setValueAtTime(100, audioCtx.currentTime);
-                osc.frequency.linearRampToValueAtTime(30, audioCtx.currentTime + 0.5);
-                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-                gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
-                osc.start(); osc.stop(audioCtx.currentTime + 0.5);
-            }
-        }
 
-        let scene, camera, renderer, player;
-        let leftArm, rightArm, leftLeg, rightLeg, torso, head;
-        let tracks = [-4, 0, 4]; 
-        let currentTrack = 1;    
-        let obstacles = [], coins = [], powerups = [], environmentObjects = [];
-        
-        let score = 0, coinsCollectedThisRun = 0;
-        let totalCoins = parseInt(localStorage.getItem("subway_total_coins")) || 0;
-        let highscore = parseInt(localStorage.getItem("subway_highscore_points")) || 0;
-        
-        let gameState = "MENU"; 
-        let speed = 0.35, baseSpeed = 0.35, gameTimer = 0;
-        
-        let isJumping = false, jumpVelocity = 0;
-        let isDucking = false, duckTimer = 0;
-        const gravity = 0.014; 
-
+osc.type = 'sawtooth'; osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+osc.frequency.linearRampToValueAtTime(30, audioCtx.currentTime + 0.5);
+gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+}
+}
+let scene, camera, renderer, player;
+let leftArm, rightArm, leftLeg, rightLeg, torso, head;
+let dirLight, ambientLight;
+let tracks = [-4, 0, 4];
+let currentTrack = 1;
+let obstacles = [], coins = [], powerups = [], environmentObjects = [];
+let rtxMaterials = [];
+let score = 0, coinsCollectedThisRun = 0;
+let totalCoins = parseInt(localStorage.getItem("subway_total_coins")) || 0;
+let highscore = parseInt(localStorage.getItem("subway_highscore_points")) || 0;
+let gameState = "MENU";
+let speed = 0.35, baseSpeed = 0.35, gameTimer = 0;
+let isJumping = false, jumpVelocity = 0;
+let isDucking = false, duckTimer = 0;
+const gravity = 0.014;
 const jumpForce = 0.38;
 let animTime = 0;
 let respawnCost = 1;
@@ -172,6 +187,9 @@ let modNoClip = false;
 let modFly = false;
 let modInfJumps = false;
 let modSpeedMultiplier = 1;
+let modRTX = false;
+let modDisco = false;
+let discoHue = 0;
 document.getElementById("menu-highscore").innerText = highscore;
 document.getElementById("ui-total-coins").innerText = totalCoins;
 init();
@@ -185,22 +203,38 @@ scene.fog = new THREE.FogExp2(0x3a9ad9, 0.015);
 camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.set(0, 7, 11);
 camera.lookAt(0, 2, -5);
-renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
-scene.add(new THREE.AmbientLight(0xffffff, 0.7));
-const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-dirLight.position.set(10, 20, 10);
+ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+scene.add(ambientLight);
+dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+dirLight.position.set(15, 25, 10);
 dirLight.castShadow = true;
+dirLight.shadow.mapSize.width = 512;
+dirLight.shadow.mapSize.height = 512;
+dirLight.shadow.camera.near = 0.5;
+dirLight.shadow.camera.far = 50;
+dirLight.shadow.camera.left = -10;
+dirLight.shadow.camera.right = 10;
+dirLight.shadow.camera.top = 15;
+dirLight.shadow.camera.bottom = -5;
+dirLight.shadow.bias = -0.0005;
 scene.add(dirLight);
-const ground = new THREE.Mesh(new THREE.PlaneGeometry(24, 1000), new THREE.MeshStandardMaterial({ color: 0x333333 }));
+const groundGeo = new THREE.PlaneGeometry(24, 1000);
+const groundMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.6, metalness: 0.1 });
+rtxMaterials.push(groundMat);
+const ground = new THREE.Mesh(groundGeo, groundMat);
 ground.rotation.x = -Math.PI / 2;
 ground.position.z = -450;
 ground.receiveShadow = true;
 scene.add(ground);
 for (let t of tracks) {
-const rail1 = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.08, 1000), new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.9 }));
+const railMat = new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.8, roughness: 0.2 });
+rtxMaterials.push(railMat);
+const rail1 = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.08, 1000), railMat);
 rail1.position.set(t - 0.7, 0.04, -450);
 const rail2 = rail1.clone();
 rail2.position.x = t + 0.7;
@@ -210,6 +244,7 @@ player = new THREE.Group();
 const yellowMat = new THREE.MeshStandardMaterial({ color: 0xffcd03, roughness: 0.5 });
 const blueMat = new THREE.MeshStandardMaterial({ color: 0x00a2ff, roughness: 0.5 });
 const greenMat = new THREE.MeshStandardMaterial({ color: 0x287f46, roughness: 0.5 });
+rtxMaterials.push(yellowMat, blueMat, greenMat);
 torso = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.9, 0.45), blueMat);
 torso.position.y = 1.05;
 torso.castShadow = true;
@@ -224,13 +259,15 @@ ctx.fillStyle = '#ffcd03'; ctx.fillRect(0,0,64,64);
 ctx.fillStyle = '#000000'; ctx.fillRect(14,20,8,12); ctx.fillRect(42,20,8,12);
 ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(32,32,16,0,Math.PI); ctx.stroke();
 const faceTex = new THREE.CanvasTexture(canvas);
-head.material = [yellowMat, yellowMat, yellowMat, yellowMat, yellowMat, new THREE.MeshStandardMaterial({map: faceTex})];
+const faceMat = new THREE.MeshStandardMaterial({map: faceTex, roughness: 0.5});
+rtxMaterials.push(faceMat);
+head.material = [yellowMat, yellowMat, yellowMat, yellowMat, yellowMat, faceMat];
 const armGeo = new THREE.BoxGeometry(0.25, 0.9, 0.25); armGeo.translate(0, -0.45, 0);
-leftArm = new THREE.Mesh(armGeo, yellowMat); leftArm.position.set(-0.58, 0.45, 0); torso.add(leftArm);
-rightArm = new THREE.Mesh(armGeo, yellowMat); rightArm.position.set(0.58, 0.45, 0); torso.add(rightArm);
+leftArm = new THREE.Mesh(armGeo, yellowMat); leftArm.position.set(-0.58, 0.45, 0); leftArm.castShadow = true; torso.add(leftArm);
+rightArm = new THREE.Mesh(armGeo, yellowMat); rightArm.position.set(0.58, 0.45, 0); rightArm.castShadow = true; torso.add(rightArm);
 const legGeo = new THREE.BoxGeometry(0.42, 0.6, 0.42); legGeo.translate(0, -0.3, 0);
-leftLeg = new THREE.Mesh(legGeo, greenMat); leftLeg.position.set(-0.22, -0.45, 0); torso.add(leftLeg);
-rightLeg = new THREE.Mesh(legGeo, greenMat); rightLeg.position.set(0.22, -0.45, 0); torso.add(rightLeg);
+leftLeg = new THREE.Mesh(legGeo, greenMat); leftLeg.position.set(-0.22, -0.45, 0); leftLeg.castShadow = true; torso.add(leftLeg);
+rightLeg = new THREE.Mesh(legGeo, greenMat); rightLeg.position.set(0.22, -0.45, 0); rightLeg.castShadow = true; torso.add(rightLeg);
 player.position.set(tracks[currentTrack], 0, 0);
 scene.add(player);
 for (let i = 0; i < 25; i++) spawnEnvironment(-i * 35);
@@ -258,16 +295,16 @@ let header = document.getElementById("mod-header");
 let isDragging = false;
 let startX, startY, currentX, currentY;
 function dragStart(e) {
-let clientX = e.type === "touchstart" ? e.touches[0].clientX : e.clientX;
-let clientY = e.type === "touchstart" ? e.touches[0].clientY : e.clientY;
+let clientX = e.type === "touchstart" ? e.touches.clientX : e.clientX;
+let clientY = e.type === "touchstart" ? e.touches.clientY : e.clientY;
 isDragging = true;
 startX = clientX - panel.offsetLeft;
 startY = clientY - panel.offsetTop;
 }
 function dragMove(e) {
 if (!isDragging) return;
-let clientX = e.type === "touchmove" ? e.touches[0].clientX : e.clientX;
-let clientY = e.type === "touchmove" ? e.touches[0].clientY : e.clientY;
+let clientX = e.type === "touchmove" ? e.touches.clientX : e.clientX;
+let clientY = e.type === "touchmove" ? e.touches.clientY : e.clientY;
 currentX = clientX - startX;
 currentY = clientY - startY;
 panel.style.left = currentX + "px";
@@ -289,10 +326,40 @@ modNoClip = document.getElementById("mod-noclip").checked;
 modFly = document.getElementById("mod-fly").checked;
 modInfJumps = document.getElementById("mod-inf-jumps").checked;
 modSpeedMultiplier = parseFloat(document.getElementById("mod-speedhack").value);
+modRTX = document.getElementById("mod-rtx").checked;
+modDisco = document.getElementById("mod-disco").checked;
 if (modInfCoins) {
 totalCoins = 999999;
 localStorage.setItem("subway_total_coins", totalCoins);
 document.getElementById("ui-total-coins").innerText = totalCoins;
+}
+if (!modDisco) {
+let staticColor = new THREE.Color(document.getElementById("mod-sky-color").value);
+scene.background = staticColor;
+scene.fog.color = staticColor;
+}
+if (modRTX) {
+dirLight.shadow.mapSize.width = 2048;
+dirLight.shadow.mapSize.height = 2048;
+if(dirLight.shadow.map) dirLight.shadow.map.dispose();
+dirLight.shadow.map = null;
+ambientLight.intensity = 0.3;
+dirLight.intensity = 1.4;
+rtxMaterials.forEach(m => {
+m.roughness = THREE.MathUtils.clamp(m.roughness - 0.3, 0.02, 1.0);
+m.metalness = THREE.MathUtils.clamp(m.metalness + 0.4, 0.0, 1.0);
+});
+} else {
+dirLight.shadow.mapSize.width = 512;
+dirLight.shadow.mapSize.height = 512;
+if(dirLight.shadow.map) dirLight.shadow.map.dispose();
+dirLight.shadow.map = null;
+ambientLight.intensity = 0.7;
+dirLight.intensity = 0.8;
+rtxMaterials.forEach(m => {
+m.roughness = 0.5;
+m.metalness = 0.1;
+});
 }
 }
 function spawnObstacle(zPos) {
@@ -306,19 +373,24 @@ const rand = Math.random();
 if (rand > 0.4) {
 const hasRamp = Math.random() > 0.5;
 const trainGeo = new THREE.BoxGeometry(2.6, 3.5, 12);
-const trainMat = new THREE.MeshStandardMaterial({ color: 0xd93838, roughness: 0.3 });
+const trainMat = new THREE.MeshStandardMaterial({ color: 0xd93838, roughness: modRTX ? 0.05 : 0.3, metalness: modRTX ? 0.7 : 0.1 });
+rtxMaterials.push(trainMat);
 const train = new THREE.Mesh(trainGeo, trainMat);
 train.position.set(trackX, 1.75, zPos);
 train.castShadow = true;
+train.receiveShadow = true;
 train.userData = { type: "train", hasRamp: hasRamp };
 scene.add(train);
 obstacles.push(train);
 if (hasRamp) {
 const rampGeo = new THREE.BoxGeometry(2.6, 0.1, 4);
-const rampMat = new THREE.MeshStandardMaterial({ color: 0xffcd03 });
+const rampMat = new THREE.MeshStandardMaterial({ color: 0xffcd03, roughness: modRTX ? 0.1 : 0.5 });
+rtxMaterials.push(rampMat);
 const ramp = new THREE.Mesh(rampGeo, rampMat);
 ramp.position.set(trackX, 1.75, zPos + 8);
 ramp.rotation.x = -0.4;
+ramp.castShadow = true;
+ramp.receiveShadow = true;
 ramp.userData = { type: "ramp" };
 scene.add(ramp);
 obstacles.push(ramp);
@@ -327,15 +399,21 @@ for (let j = -4; j <= 4; j += 2) {
 if (Math.random() > 0.2) spawnCoin(trackX, zPos + j, 3.9);
 }
 } else if (rand > 0.15) {
-const barrier = new THREE.Mesh(new THREE.BoxGeometry(3, 0.8, 0.5), new THREE.MeshStandardMaterial({ color: 0xffcc00 }));
+const barrierMat = new THREE.MeshStandardMaterial({ color: 0xffcc00, roughness: modRTX ? 0.1 : 0.5 });
+rtxMaterials.push(barrierMat);
+const barrier = new THREE.Mesh(new THREE.BoxGeometry(3, 0.8, 0.5), barrierMat);
 barrier.position.set(trackX, 1.8, zPos);
+barrier.castShadow = true;
 barrier.userData = { type: "high_barrier" };
 scene.add(barrier);
 obstacles.push(barrier);
 spawnCoin(trackX, zPos - 3, 1.3);
 } else {
-const hurdle = new THREE.Mesh(new THREE.BoxGeometry(3, 1.2, 0.5), new THREE.MeshStandardMaterial({ color: 0xef6c00 }));
+const hurdleMat = new THREE.MeshStandardMaterial({ color: 0xef6c00, roughness: modRTX ? 0.1 : 0.5 });
+rtxMaterials.push(hurdleMat);
+const hurdle = new THREE.Mesh(new THREE.BoxGeometry(3, 1.2, 0.5), hurdleMat);
 hurdle.position.set(trackX, 0.6, zPos);
+hurdle.castShadow = true;
 hurdle.userData = { type: "hurdle" };
 scene.add(hurdle);
 obstacles.push(hurdle);
@@ -347,9 +425,12 @@ if (Math.random() > 0.3) spawnCoin(trackX, zPos - 6, 1.3);
 }
 }
 function spawnCoin(x, z, y = 1.3) {
-const coin = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.1, 16), new THREE.MeshStandardMaterial({ color: 0xffea00, metalness: 0.8 }));
+const coinMat = new THREE.MeshStandardMaterial({ color: 0xffea00, metalness: modRTX ? 1.0 : 0.8, roughness: modRTX ? 0.02 : 0.1 });
+rtxMaterials.push(coinMat);
+const coin = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.1, 16), coinMat);
 coin.rotation.x = Math.PI / 2;
 coin.position.set(x, y, z);
+coin.castShadow = true;
 scene.add(coin);
 coins.push(coin);
 }
@@ -364,17 +445,21 @@ if (type === "magnet") color = 0xe91e63;
 if (type === "jetpack") color = 0x4caf50;
 if (type === "boots") color = 0x2196f3;
 const geo = new THREE.BoxGeometry(0.6, 0.6, 0.6);
-const mat = new THREE.MeshStandardMaterial({ color: color, metalness: 0.5 });
+const mat = new THREE.MeshStandardMaterial({ color: color, metalness: modRTX ? 0.8 : 0.5, roughness: modRTX ? 0.05 : 0.5 });
+rtxMaterials.push(mat);
 const item = new THREE.Mesh(geo, mat);
 item.position.set(x, 1.5, z);
+item.castShadow = true;
 item.userData = { type: type };
 scene.add(item);
 powerups.push(item);
 }
 function spawnEnvironment(zPos) {
 const poleGeo = new THREE.CylinderGeometry(0.08, 0.08, 9);
-const poleMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
+const poleMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: modRTX ? 0.8 : 0.1 });
+rtxMaterials.push(poleMat);
 const leftPole = new THREE.Mesh(poleGeo, poleMat); leftPole.position.set(-8, 4.5, zPos);
+leftPole.castShadow = true;
 const rightPole = leftPole.clone(); rightPole.position.x = 8;
 scene.add(leftPole, rightPole);
 environmentObjects.push(leftPole, rightPole);
@@ -390,7 +475,7 @@ function handleTouchStart(e) {
 let panel = document.getElementById("mod-panel");
 if (panel.contains(e.target)) return;
 if (gameState !== "PLAYING") return;
-let touch = e.touches[0];
+let touch = e.touches;
 touchStartX = touch.clientX;
 touchStartY = touch.clientY;
 }
@@ -403,7 +488,7 @@ function handleTouchEnd(e) {
 let panel = document.getElementById("mod-panel");
 if (panel.contains(e.target)) return;
 if (gameState !== "PLAYING") return;
-let touch = e.changedTouches[0];
+let touch = e.changedTouches;
 let diffX = touch.clientX - touchStartX;
 let diffY = touch.clientY - touchStartY;
 if (Math.abs(diffX) > Math.abs(diffY)) {
@@ -485,7 +570,7 @@ gameState = "MENU";
 document.getElementById("pause-screen").style.display = "none";
 document.getElementById("gameover-screen").style.display = "none";
 document.getElementById("menu-screen").style.display = "flex";
-document.getElementById("pause-btn").style.display = "none";
+document.getElementById("pause-btn").style.none;
 document.getElementById("menu-highscore").innerText = highscore;
 resetGameTrack();
 }
@@ -537,6 +622,12 @@ updateMods();
 }
 function animate() {
 requestAnimationFrame(animate);
+if (modDisco) {
+discoHue = (discoHue + 0.5) % 360;
+let discoColor = new THREE.Color(hsl(${discoHue}, 70%, 50%));
+scene.background = discoColor;
+scene.fog.color = discoColor;
+}
 if (gameState === "MENU" && torso) {
 animTime += 0.02;
 torso.position.y = 1.05 + Math.sin(animTime * 2) * 0.05;
