@@ -299,7 +299,7 @@ if (e.key === "ArrowUp") jump();
 if (e.key === "ArrowDown") duck();
 }
 function handleTouchStart(e) {
-if (gameState === "MENU") return;
+if (gameState === "MENU" || gameState === "GAMEOVER") return;
 e.preventDefault();
 let touch = e.touches[0];
 lastTouchX = touch.clientX;
@@ -386,6 +386,7 @@ document.getElementById("gameover-screen").style.display = "none";
 document.getElementById("menu-screen").style.display = "flex";
 document.getElementById("pause-btn").style.display = "none";
 document.getElementById("menu-highscore").innerText = highscore;
+resetGameTrack();
 }
 function gameOver() {
 if (invincibilityFrames > 0) return;
