@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -45,7 +47,7 @@
 
     <div id="mod-panel">
         <div class="mod-title" id="mod-header">
-            <span>Mod Menu v1</span>
+            <span>Mod Menu V2</span>
             <button class="mod-minimize-btn" onclick="toggleMinimize(event)">_</button>
         </div>
         <div class="mod-content" id="mod-content">
@@ -66,7 +68,7 @@
                 <label class="switch"><input type="checkbox" id="mod-inf-jumps" onchange="updateMods()"><span class="slider"></span></label>
             </div>
             <div class="mod-row">
-                <span>Speedhack</span>
+                <span>SpeedHack</span>
                 <input type="range" id="mod-speedhack" class="mod-range" min="1" max="5" step="0.5" value="1" oninput="updateMods()">
             </div>
         </div>
@@ -390,7 +392,7 @@ function handleTouchStart(e) {
 let panel = document.getElementById("mod-panel");
 if (panel.contains(e.target)) return;
 if (gameState !== "PLAYING") return;
-let touch = e.touches;
+let touch = e.touches[0];
 touchStartX = touch.clientX;
 touchStartY = touch.clientY;
 }
@@ -403,7 +405,7 @@ function handleTouchEnd(e) {
 let panel = document.getElementById("mod-panel");
 if (panel.contains(e.target)) return;
 if (gameState !== "PLAYING") return;
-let touch = e.changedTouches;
+let touch = e.changedTouches[0];
 let diffX = touch.clientX - touchStartX;
 let diffY = touch.clientY - touchStartY;
 if (Math.abs(diffX) > Math.abs(diffY)) {
