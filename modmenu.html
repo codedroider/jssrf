@@ -6,18 +6,17 @@
     <title>jssrf | Mod Menu V3</title>
     <style>
         body { margin: 0; overflow: hidden; background-color: #111; font-family: 'Arial Black', sans-serif; user-select: none; touch-action: none; }
-        .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; color: white; background: rgba(0,0,0,0.5); }
+        .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; color: white; background: rgba(0,0,0,0.6); }
         #menu-screen { background: linear-gradient(to bottom, #3a9ad9, #1e4f6e); }
         #game-ui { position: absolute; top: 20px; left: 20px; color: white; font-size: 20px; z-index: 10; line-height: 1.4; pointer-events: none; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); }
         #active-powerup { color: #ffeb3b; font-size: 18px; margin-top: 5px; display: none; }
         #pause-btn { position: absolute; top: 20px; right: 20px; width: 50px; height: 50px; background: #fff; border: 4px solid #000; border-radius: 10px; font-size: 24px; font-weight: bold; cursor: pointer; z-index: 150; display: none; align-items: center; justify-content: center; color: black; }
         .btn { padding: 15px 40px; font-size: 24px; background: #ffcd03; color: black; border: 4px solid #000; border-radius: 12px; cursor: pointer; font-weight: bold; margin: 10px; box-shadow: 0 6px #b59102; transition: 0.1s; z-index: 110; }
         .btn:active { transform: translateY(4px); box-shadow: 0 2px #b59102; }
-        h1 { font-size: 48px; text-shadow: 4px 4px #00a2ff; margin-bottom: 5px; text-align: center; }
+        h1 { font-size: 48px; text-shadow: 4px 4px #00a2ff; margin-bottom: 5px; text-align: center; margin-top: 0; }
         .score-display { font-size: 24px; margin-bottom: 20px; text-shadow: 2px 2px #000; }
         #invincible-flash { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 90; border: 0px solid rgba(255,255,255,0.5); box-sizing: border-box; }
-
-        #mod-panel { position: absolute; top: 100px; left: 20px; width: 280px; background: rgba(20, 20, 20, 0.95); border: 3px solid #00ffcc; border-radius: 10px; color: white; z-index: 200; box-shadow: 0 0 15px rgba(0,255,204,0.5); font-family: sans-serif; overflow: hidden; }
+        #mod-panel { position: absolute; top: 80px; left: 20px; width: 280px; background: rgba(20, 20, 20, 0.95); border: 3px solid #00ffcc; border-radius: 10px; color: white; z-index: 200; box-shadow: 0 0 15px rgba(0,255,204,0.5); font-family: sans-serif; overflow: hidden; }
         .mod-title { font-size: 16px; font-weight: bold; color: black; background: #00ffcc; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; text-transform: uppercase; font-family: 'Arial Black', sans-serif; cursor: move; }
         .mod-minimize-btn { background: none; border: none; color: black; font-size: 18px; font-weight: bold; cursor: pointer; padding: 0 5px; line-height: 1; }
         .mod-content { padding: 15px; max-height: 320px; overflow-y: auto; }
@@ -31,15 +30,8 @@
         input:checked + .slider:before { transform: translateX(20px); }
         .mod-range { width: 100px; accent-color: #00ffcc; }
         .mod-color { border: 2px solid #666; background: none; cursor: pointer; width: 40px; height: 24px; padding: 0; }
-
-        #touch-controls { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5; display: none; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
-        .t-btn { width: 100%; height: 100%; box-sizing: border-box; }
-        #t-left { grid-column: 1; grid-row: 1 / span 2; }
-        #t-right { grid-column: 2; grid-row: 1 / span 2; }
-        #t-center-top { grid-column: 1 / span 2; grid-row: 1; height: 50%; position: absolute; top: 0; left: 25%; width: 50%; }
-        #t-center-bottom { grid-column: 1 / span 2; grid-row: 2; height: 50%; position: absolute; bottom: 0; left: 25%; width: 50%; }
     </style>
-    <script src=https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cloudflare.com"></script>
 </head>
 <body>
 
@@ -52,16 +44,9 @@
 
     <div id="pause-btn" onclick="pauseGame(event)">||</div>
 
-    <div id="touch-controls">
-        <div class="t-btn" id="t-left" onclick="moveLane(-1)"></div>
-        <div class="t-btn" id="t-right" onclick="moveLane(1)"></div>
-        <div class="t-btn" id="t-center-top" onclick="jump()"></div>
-        <div class="t-btn" id="t-center-bottom" onclick="duck()"></div>
-    </div>
-
     <div id="mod-panel">
         <div class="mod-title" id="mod-header">
-            <span>RTX Cheat Panel</span>
+            <span>Mod Menu V3</span>
             <button class="mod-minimize-btn" onclick="toggleMinimize(event)">_</button>
         </div>
         <div class="mod-content" id="mod-content">
@@ -71,11 +56,11 @@
                 <label class="switch"><input type="checkbox" id="mod-inf-coins" onchange="updateMods()"><span class="slider"></span></label>
             </div>
             <div class="mod-row">
-                <span>No Clip (God Mode)</span>
+                <span>NoClip</span>
                 <label class="switch"><input type="checkbox" id="mod-noclip" onchange="updateMods()"><span class="slider"></span></label>
             </div>
             <div class="mod-row">
-                <span>Fly Mode</span>
+                <span>Fly</span>
                 <label class="switch"><input type="checkbox" id="mod-fly" onchange="updateMods()"><span class="slider"></span></label>
             </div>
             <div class="mod-row">
@@ -83,7 +68,7 @@
                 <label class="switch"><input type="checkbox" id="mod-inf-jumps" onchange="updateMods()"><span class="slider"></span></label>
             </div>
             <div class="mod-row">
-                <span>Speedhack</span>
+                <span>SpeedHack</span>
                 <input type="range" id="mod-speedhack" class="mod-range" min="1" max="5" step="0.5" value="1" oninput="updateMods()">
             </div>
 
@@ -97,7 +82,7 @@
                 <input type="color" id="mod-sky-color" class="mod-color" value="#3a9ad9" onchange="updateMods()">
             </div>
             <div class="mod-row">
-                <span>RGB / Disco Sky</span>
+                <span>Disco Sky</span>
                 <label class="switch"><input type="checkbox" id="mod-disco" onchange="updateMods()"><span class="slider"></span></label>
             </div>
         </div>
@@ -127,59 +112,39 @@
     <script>
         let audioCtx = null;
         function initAudio() {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
         }
 
         function playSound(type) {
             if (!audioCtx) return;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            
+            osc.connect(gain); gain.connect(audioCtx.destination);
             if (type === 'coin') {
-                osc.type = 'sine'; osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
-                osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1);
-                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc.type = 'sine'; osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
                 osc.start(); osc.stop(audioCtx.currentTime + 0.3);
             } else if (type === 'jump') {
-                osc.type = 'triangle'; osc.frequency.setValueAtTime(150, audioCtx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + 0.15);
-                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                osc.type = 'triangle'; osc.frequency.setValueAtTime(150, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime); gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.15);
+            } else if (type === 'duck') {
+                osc.type = 'triangle'; osc.frequency.setValueAtTime(300, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime); gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.15);
+            } else if (type === 'crash') {
+                osc.type = 'sawtooth'; osc.frequency.setValueAtTime(100, audioCtx.currentTime); osc.frequency.linearRampToValueAtTime(30, audioCtx.currentTime + 0.5);
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime); gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+            }
+        }
 
-gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
-osc.start(); osc.stop(audioCtx.currentTime + 0.15);
-} else if (type === 'duck') {
-osc.type = 'triangle'; osc.frequency.setValueAtTime(300, audioCtx.currentTime);
-osc.frequency.exponentialRampToValueAtTime(80, audioCtx.currentTime + 0.15);
-gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
-osc.start(); osc.stop(audioCtx.currentTime + 0.15);
-} else if (type === 'powerup') {
-osc.type = 'sawtooth'; osc.frequency.setValueAtTime(200, audioCtx.currentTime);
-osc.frequency.linearRampToValueAtTime(600, audioCtx.currentTime + 0.4);
-gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
-osc.start(); osc.stop(audioCtx.currentTime + 0.4);
-} else if (type === 'crash') {
-osc.type = 'sawtooth'; osc.frequency.setValueAtTime(100, audioCtx.currentTime);
-osc.frequency.linearRampToValueAtTime(30, audioCtx.currentTime + 0.5);
-gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
-osc.start(); osc.stop(audioCtx.currentTime + 0.5);
-}
-}
-let scene, camera, renderer, player;
-let leftArm, rightArm, leftLeg, rightLeg, torso, head;
-let dirLight, ambientLight;
-let tracks = [-4, 0, 4];
-let currentTrack = 1;
+        let scene, camera, renderer, player;
+        let leftArm, rightArm, leftLeg, rightLeg, torso, head;
+        let dirLight, ambientLight;
+        let tracks = [-4, 0, 4]; let currentTrack = 1;    
+
 let obstacles = [], coins = [], powerups = [], environmentObjects = [];
 let rtxMaterials = [];
 let score = 0, coinsCollectedThisRun = 0;
@@ -187,22 +152,11 @@ let totalCoins = parseInt(localStorage.getItem("subway_total_coins")) || 0;
 let highscore = parseInt(localStorage.getItem("subway_highscore_points")) || 0;
 let gameState = "MENU";
 let speed = 0.35, baseSpeed = 0.35, gameTimer = 0;
-let isJumping = false, jumpVelocity = 0;
-let isDucking = false, duckTimer = 0;
-const gravity = 0.014;
-const jumpForce = 0.38;
-let animTime = 0;
-let respawnCost = 1;
-let invincibilityFrames = 0;
-let activePowerup = null, powerupTime = 0;
-let modInfCoins = false;
-let modNoClip = false;
-let modFly = false;
-let modInfJumps = false;
-let modSpeedMultiplier = 1;
-let modRTX = false;
-let modDisco = false;
-let discoHue = 0;
+let isJumping = false, jumpVelocity = 0; let isDucking = false, duckTimer = 0;
+const gravity = 0.014; const jumpForce = 0.38; let animTime = 0;
+let respawnCost = 1; let invincibilityFrames = 0; let activePowerup = null, powerupTime = 0;
+let modInfCoins = false; let modNoClip = false; let modFly = false; let modInfJumps = false;
+let modSpeedMultiplier = 1; let modRTX = false; let modDisco = false; let discoHue = 0;
 document.getElementById("menu-highscore").innerText = highscore;
 document.getElementById("ui-total-coins").innerText = totalCoins;
 init();
@@ -214,66 +168,34 @@ scene = new THREE.Scene();
 scene.background = new THREE.Color(0x3a9ad9);
 scene.fog = new THREE.FogExp2(0x3a9ad9, 0.015);
 camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(0, 7, 11);
-camera.lookAt(0, 2, -5);
+camera.position.set(0, 7, 11); camera.lookAt(0, 2, -5);
 renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
-ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
-scene.add(ambientLight);
-dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-dirLight.position.set(15, 25, 10);
-dirLight.castShadow = true;
-dirLight.shadow.mapSize.width = 512;
-dirLight.shadow.mapSize.height = 512;
-dirLight.shadow.camera.near = 0.5;
-dirLight.shadow.camera.far = 50;
-dirLight.shadow.camera.left = -10;
-dirLight.shadow.camera.right = 10;
-dirLight.shadow.camera.top = 15;
-dirLight.shadow.camera.bottom = -5;
-dirLight.shadow.bias = -0.0005;
+ambientLight = new THREE.AmbientLight(0xffffff, 0.7); scene.add(ambientLight);
+dirLight = new THREE.DirectionalLight(0xffffff, 0.8); dirLight.position.set(15, 25, 10); dirLight.castShadow = true;
+dirLight.shadow.mapSize.width = 512; dirLight.shadow.mapSize.height = 512;
 scene.add(dirLight);
-const groundGeo = new THREE.PlaneGeometry(24, 1000);
-const groundMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.6, metalness: 0.1 });
-rtxMaterials.push(groundMat);
-const ground = new THREE.Mesh(groundGeo, groundMat);
-ground.rotation.x = -Math.PI / 2;
-ground.position.z = -450;
-ground.receiveShadow = true;
-scene.add(ground);
+const groundMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.6, metalness: 0.1 }); rtxMaterials.push(groundMat);
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(24, 1000), groundMat);
+ground.rotation.x = -Math.PI / 2; ground.position.z = -450; ground.receiveShadow = true; scene.add(ground);
 for (let t of tracks) {
-const railMat = new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.8, roughness: 0.2 });
-rtxMaterials.push(railMat);
-const rail1 = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.08, 1000), railMat);
-rail1.position.set(t - 0.7, 0.04, -450);
-const rail2 = rail1.clone();
-rail2.position.x = t + 0.7;
-scene.add(rail1, rail2);
+const railMat = new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.8, roughness: 0.2 }); rtxMaterials.push(railMat);
+const rail1 = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.08, 1000), railMat); rail1.position.set(t - 0.7, 0.04, -450);
+const rail2 = rail1.clone(); rail2.position.x = t + 0.7; scene.add(rail1, rail2);
 }
 player = new THREE.Group();
 const yellowMat = new THREE.MeshStandardMaterial({ color: 0xffcd03, roughness: 0.5 });
 const blueMat = new THREE.MeshStandardMaterial({ color: 0x00a2ff, roughness: 0.5 });
 const greenMat = new THREE.MeshStandardMaterial({ color: 0x287f46, roughness: 0.5 });
 rtxMaterials.push(yellowMat, blueMat, greenMat);
-torso = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.9, 0.45), blueMat);
-torso.position.y = 1.05;
-torso.castShadow = true;
-player.add(torso);
-head = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.45, 0.45), yellowMat);
-head.position.set(0, 0.675, 0);
-head.castShadow = true;
-torso.add(head);
+torso = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.9, 0.45), blueMat); torso.position.y = 1.05; torso.castShadow = true; player.add(torso);
+head = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.45, 0.45), yellowMat); head.position.set(0, 0.675, 0); head.castShadow = true; torso.add(head);
 const canvas = document.createElement('canvas'); canvas.width = 64; canvas.height = 64;
-const ctx = canvas.getContext('2d');
-ctx.fillStyle = '#ffcd03'; ctx.fillRect(0,0,64,64);
-ctx.fillStyle = '#000000'; ctx.fillRect(14,20,8,12); ctx.fillRect(42,20,8,12);
-ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(32,32,16,0,Math.PI); ctx.stroke();
-const faceTex = new THREE.CanvasTexture(canvas);
-const faceMat = new THREE.MeshStandardMaterial({map: faceTex, roughness: 0.5});
-rtxMaterials.push(faceMat);
+const ctx = canvas.getContext('2d'); ctx.fillStyle = '#ffcd03'; ctx.fillRect(0,0,64,64); ctx.fillStyle = '#000000'; ctx.fillRect(14,20,8,12); ctx.fillRect(42,20,8,12); ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(32,32,16,0,Math.PI); ctx.stroke();
+const faceTex = new THREE.CanvasTexture(canvas); const faceMat = new THREE.MeshStandardMaterial({map: faceTex, roughness: 0.5}); rtxMaterials.push(faceMat);
 head.material = [yellowMat, yellowMat, yellowMat, yellowMat, yellowMat, faceMat];
 const armGeo = new THREE.BoxGeometry(0.25, 0.9, 0.25); armGeo.translate(0, -0.45, 0);
 leftArm = new THREE.Mesh(armGeo, yellowMat); leftArm.position.set(-0.58, 0.45, 0); leftArm.castShadow = true; torso.add(leftArm);
@@ -281,54 +203,45 @@ rightArm = new THREE.Mesh(armGeo, yellowMat); rightArm.position.set(0.58, 0.45, 
 const legGeo = new THREE.BoxGeometry(0.42, 0.6, 0.42); legGeo.translate(0, -0.3, 0);
 leftLeg = new THREE.Mesh(legGeo, greenMat); leftLeg.position.set(-0.22, -0.45, 0); leftLeg.castShadow = true; torso.add(leftLeg);
 rightLeg = new THREE.Mesh(legGeo, greenMat); rightLeg.position.set(0.22, -0.45, 0); rightLeg.castShadow = true; torso.add(rightLeg);
-player.position.set(tracks[currentTrack], 0, 0);
-scene.add(player);
+player.position.set(tracks[currentTrack], 0, 0); scene.add(player);
 for (let i = 0; i < 25; i++) spawnEnvironment(-i * 35);
 window.addEventListener('keydown', handleKeyDown);
 window.addEventListener('resize', onWindowResize);
+window.addEventListener('pointerdown', handleScreenClick);
+}
+function handleScreenClick(e) {
+let panel = document.getElementById("mod-panel");
+if (panel.contains(e.target) || gameState !== "PLAYING") return;
+let x = e.clientX / window.innerWidth;
+let y = e.clientY / window.innerHeight;
+if (x < 0.35) { moveLane(-1); }
+else if (x > 0.65) { moveLane(1); }
+else { if (y < 0.5) jump(); else duck(); }
 }
 function toggleMinimize(e) {
 e.stopPropagation();
 let content = document.getElementById("mod-content");
 let btn = e.target;
-if (content.style.display === "none") {
-content.style.display = "block";
-btn.innerText = "_";
-} else {
-content.style.display = "none";
-btn.innerText = "ㅁ";
-}
+if (content.style.display === "none") { content.style.display = "block"; btn.innerText = "_"; }
+else { content.style.display = "none"; btn.innerText = "ㅁ"; }
 }
 function setupDragAndMinimize() {
-let panel = document.getElementById("mod-panel");
-let header = document.getElementById("mod-header");
-let isDragging = false;
-let startX, startY, currentX, currentY;
+let panel = document.getElementById("mod-panel"); let header = document.getElementById("mod-header");
+let isDragging = false; let startX, startY;
 function dragStart(e) {
-let clientX = e.type === "touchstart" ? e.touches[0].clientX : e.clientX;
-let clientY = e.type === "touchstart" ? e.touches[0].clientY : e.clientY;
-isDragging = true;
-startX = clientX - panel.offsetLeft;
-startY = clientY - panel.offsetTop;
+let clientX = e.type === "touchstart" ? e.touches.clientX : e.clientX;
+let clientY = e.type === "touchstart" ? e.touches.clientY : e.clientY;
+isDragging = true; startX = clientX - panel.offsetLeft; startY = clientY - panel.offsetTop;
 }
 function dragMove(e) {
 if (!isDragging) return;
-let clientX = e.type === "touchmove" ? e.touches[0].clientX : e.clientX;
-let clientY = e.type === "touchmove" ? e.touches[0].clientY : e.clientY;
-currentX = clientX - startX;
-currentY = clientY - startY;
-panel.style.left = currentX + "px";
-panel.style.top = currentY + "px";
+let clientX = e.type === "touchmove" ? e.touches.clientX : e.clientX;
+let clientY = e.type === "touchmove" ? e.touches.clientY : e.clientY;
+panel.style.left = (clientX - startX) + "px"; panel.style.top = (clientY - startY) + "px";
 }
-function dragEnd() {
-isDragging = false;
-}
-header.addEventListener("mousedown", dragStart);
-document.addEventListener("mousemove", dragMove);
-document.addEventListener("mouseup", dragEnd);
-header.addEventListener("touchstart", dragStart, { passive: true });
-document.addEventListener("touchmove", dragMove, { passive: true });
-document.addEventListener("touchend", dragEnd);
+function dragEnd() { isDragging = false; }
+header.addEventListener("mousedown", dragStart); document.addEventListener("mousemove", dragMove); document.addEventListener("mouseup", dragEnd);
+header.addEventListener("touchstart", dragStart, { passive: true }); document.addEventListener("touchmove", dragMove, { passive: true }); document.addEventListener("touchend", dragEnd);
 }
 function updateMods() {
 modInfCoins = document.getElementById("mod-inf-coins").checked;
@@ -338,38 +251,18 @@ modInfJumps = document.getElementById("mod-inf-jumps").checked;
 modSpeedMultiplier = parseFloat(document.getElementById("mod-speedhack").value);
 modRTX = document.getElementById("mod-rtx").checked;
 modDisco = document.getElementById("mod-disco").checked;
-if (modInfCoins) {
-totalCoins = 999999;
-localStorage.setItem("subway_total_coins", totalCoins);
-document.getElementById("ui-total-coins").innerText = totalCoins;
-}
-if (!modDisco) {
-let staticColor = new THREE.Color(document.getElementById("mod-sky-color").value);
-scene.background = staticColor;
-scene.fog.color = staticColor;
-}
+if (modInfCoins) { totalCoins = 999999; localStorage.setItem("subway_total_coins", totalCoins); document.getElementById("ui-total-coins").innerText = totalCoins; }
+if (!modDisco) { let c = new THREE.Color(document.getElementById("mod-sky-color").value); scene.background = c; scene.fog.color = c; }
 if (modRTX) {
-dirLight.shadow.mapSize.width = 2048;
-dirLight.shadow.mapSize.height = 2048;
-if(dirLight.shadow.map) dirLight.shadow.map.dispose();
-dirLight.shadow.map = null;
-ambientLight.intensity = 0.3;
-dirLight.intensity = 1.4;
-rtxMaterials.forEach(m => {
-m.roughness = 0.05;
-m.metalness = 0.8;
-});
+dirLight.shadow.mapSize.width = 2048; dirLight.shadow.mapSize.height = 2048;
+if(dirLight.shadow.map) dirLight.shadow.map.dispose(); dirLight.shadow.map = null;
+ambientLight.intensity = 0.2; dirLight.intensity = 1.5;
+rtxMaterials.forEach(m => { m.roughness = 0.05; m.metalness = 0.85; });
 } else {
-dirLight.shadow.mapSize.width = 512;
-dirLight.shadow.mapSize.height = 512;
-if(dirLight.shadow.map) dirLight.shadow.map.dispose();
-dirLight.shadow.map = null;
-ambientLight.intensity = 0.7;
-dirLight.intensity = 0.8;
-rtxMaterials.forEach(m => {
-m.roughness = 0.5;
-m.metalness = 0.1;
-});
+dirLight.shadow.mapSize.width = 512; dirLight.shadow.mapSize.height = 512;
+if(dirLight.shadow.map) dirLight.shadow.map.dispose(); dirLight.shadow.map = null;
+ambientLight.intensity = 0.7; dirLight.intensity = 0.8;
+rtxMaterials.forEach(m => { m.roughness = 0.5; m.metalness = 0.1; });
 }
 }
 function spawnObstacle(zPos) {
@@ -377,394 +270,183 @@ if (activePowerup === "jetpack" || activePowerup === "skyline" || modFly) {
 if (Math.random() < 0.4) spawnCoinRow(tracks[Math.floor(Math.random()*3)], zPos, 7);
 return;
 }
-const trackIndex = Math.floor(Math.random() * 3);
-const trackX = tracks[trackIndex];
-const rand = Math.random();
+const trackIndex = Math.floor(Math.random() * 3); const trackX = tracks[trackIndex]; const rand = Math.random();
 if (rand > 0.4) {
 const hasRamp = Math.random() > 0.5;
 const trainGeo = new THREE.BoxGeometry(2.6, 3.5, 12);
-const trainMat = new THREE.MeshStandardMaterial({ color: 0xd93838, roughness: modRTX ? 0.05 : 0.3, metalness: modRTX ? 0.7 : 0.1 });
-rtxMaterials.push(trainMat);
-const train = new THREE.Mesh(trainGeo, trainMat);
-train.position.set(trackX, 1.75, zPos);
-train.castShadow = true;
-train.receiveShadow = true;
-train.userData = { type: "train", hasRamp: hasRamp };
-scene.add(train);
-obstacles.push(train);
+const trainMat = new THREE.MeshStandardMaterial({ color: 0xd93838, roughness: modRTX ? 0.05 : 0.3, metalness: modRTX ? 0.7 : 0.1 }); rtxMaterials.push(trainMat);
+const train = new THREE.Mesh(trainGeo, trainMat); train.position.set(trackX, 1.75, zPos); train.castShadow = true; train.receiveShadow = true; train.userData = { type: "train", hasRamp: hasRamp }; scene.add(train); obstacles.push(train);
 if (hasRamp) {
 const rampGeo = new THREE.BoxGeometry(2.6, 0.1, 4);
-const rampMat = new THREE.MeshStandardMaterial({ color: 0xffcd03, roughness: modRTX ? 0.1 : 0.5 });
-rtxMaterials.push(rampMat);
-const ramp = new THREE.Mesh(rampGeo, rampMat);
-ramp.position.set(trackX, 1.75, zPos + 8);
-ramp.rotation.x = -0.4;
-ramp.castShadow = true;
-ramp.receiveShadow = true;
-ramp.userData = { type: "ramp" };
-scene.add(ramp);
-obstacles.push(ramp);
+const rampMat = new THREE.MeshStandardMaterial({ color: 0xffcd03, roughness: modRTX ? 0.1 : 0.5 }); rtxMaterials.push(rampMat);
+const ramp = new THREE.Mesh(rampGeo, rampMat); ramp.position.set(trackX, 1.75, zPos + 8); ramp.rotation.x = -0.4; ramp.castShadow = true; ramp.receiveShadow = true; ramp.userData = { type: "ramp" }; scene.add(ramp); obstacles.push(ramp);
 }
-for (let j = -4; j <= 4; j += 2) {
-if (Math.random() > 0.2) spawnCoin(trackX, zPos + j, 3.9);
-}
+for (let j = -4; j <= 4; j += 2) { if (Math.random() > 0.2) spawnCoin(trackX, zPos + j, 3.9); }
 } else if (rand > 0.15) {
-const barrierMat = new THREE.MeshStandardMaterial({ color: 0xffcc00, roughness: modRTX ? 0.1 : 0.5 });
-rtxMaterials.push(barrierMat);
-const barrier = new THREE.Mesh(new THREE.BoxGeometry(3, 0.8, 0.5), barrierMat);
-barrier.position.set(trackX, 1.8, zPos);
-barrier.castShadow = true;
-barrier.userData = { type: "high_barrier" };
-scene.add(barrier);
-obstacles.push(barrier);
+const barrierMat = new THREE.MeshStandardMaterial({ color: 0xffcc00, roughness: modRTX ? 0.1 : 0.5 }); rtxMaterials.push(barrierMat);
+const barrier = new THREE.Mesh(new THREE.BoxGeometry(3, 0.8, 0.5), barrierMat); barrier.position.set(trackX, 1.8, zPos); barrier.castShadow = true; barrier.userData = { type: "high_barrier" }; scene.add(barrier); obstacles.push(barrier);
 spawnCoin(trackX, zPos - 3, 1.3);
 } else {
-const hurdleMat = new THREE.MeshStandardMaterial({ color: 0xef6c00, roughness: modRTX ? 0.1 : 0.5 });
-rtxMaterials.push(hurdleMat);
-const hurdle = new THREE.Mesh(new THREE.BoxGeometry(3, 1.2, 0.5), hurdleMat);
-hurdle.position.set(trackX, 0.6, zPos);
-hurdle.castShadow = true;
-hurdle.userData = { type: "hurdle" };
-scene.add(hurdle);
-obstacles.push(hurdle);
+const hurdleMat = new THREE.MeshStandardMaterial({ color: 0xef6c00, roughness: modRTX ? 0.1 : 0.5 }); rtxMaterials.push(hurdleMat);
+const hurdle = new THREE.Mesh(new THREE.BoxGeometry(3, 1.2, 0.5), hurdleMat); hurdle.position.set(trackX, 0.6, zPos); hurdle.castShadow = true; hurdle.userData = { type: "hurdle" }; scene.add(hurdle); obstacles.push(hurdle);
 }
-if (Math.random() < 0.12 && !activePowerup) {
-spawnPowerUpItem(tracks[Math.floor(Math.random()*3)], zPos - 6);
-} else {
-if (Math.random() > 0.3) spawnCoin(trackX, zPos - 6, 1.3);
-}
+if (Math.random() < 0.12 && !activePowerup) { spawnPowerUpItem(tracks[Math.floor(Math.random()*3)], zPos - 6); }
+else { if (Math.random() > 0.3) spawnCoin(trackX, zPos - 6, 1.3); }
 }
 function spawnCoin(x, z, y = 1.3) {
-const coinMat = new THREE.MeshStandardMaterial({ color: 0xffea00, metalness: modRTX ? 1.0 : 0.8, roughness: modRTX ? 0.02 : 0.1 });
-rtxMaterials.push(coinMat);
-const coin = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.1, 16), coinMat);
-coin.rotation.x = Math.PI / 2;
-coin.position.set(x, y, z);
-coin.castShadow = true;
-scene.add(coin);
-coins.push(coin);
+const coinMat = new THREE.MeshStandardMaterial({ color: 0xffea00, metalness: modRTX ? 1.0 : 0.8, roughness: modRTX ? 0.02 : 0.1 }); rtxMaterials.push(coinMat);
+const coin = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.1, 16), coinMat); coin.rotation.x = Math.PI / 2; coin.position.set(x, y, z); coin.castShadow = true; scene.add(coin); coins.push(coin);
 }
-function spawnCoinRow(x, z, y) {
-for (let i = 0; i < 3; i++) spawnCoin(x, z + (i * 2), y);
-}
+function spawnCoinRow(x, z, y) { for (let i = 0; i < 3; i++) spawnCoin(x, z + (i * 2), y); }
 function spawnPowerUpItem(x, z) {
-const pool = ["magnet", "jetpack", "boots", "skyline"];
-const type = Math.random() < 0.25 ? "skyline" : pool[Math.floor(Math.random() * 3)];
-let color = 0xff00ff;
-if (type === "magnet") color = 0xe91e63;
-if (type === "jetpack") color = 0x4caf50;
-if (type === "boots") color = 0x2196f3;
-const geo = new THREE.BoxGeometry(0.6, 0.6, 0.6);
-const mat = new THREE.MeshStandardMaterial({ color: color, metalness: modRTX ? 0.8 : 0.5, roughness: modRTX ? 0.05 : 0.5 });
-rtxMaterials.push(mat);
-const item = new THREE.Mesh(geo, mat);
-item.position.set(x, 1.5, z);
-item.castShadow = true;
-item.userData = { type: type };
-scene.add(item);
-powerups.push(item);
+const pool = ["magnet", "jetpack", "boots", "skyline"]; const type = Math.random() < 0.25 ? "skyline" : pool[Math.floor(Math.random() * 3)];
+let color = 0xff00ff; if (type === "magnet") color = 0xe91e63; if (type === "jetpack") color = 0x4caf50; if (type === "boots") color = 0x2196f3;
+const mat = new THREE.MeshStandardMaterial({ color: color, metalness: modRTX ? 0.8 : 0.5, roughness: modRTX ? 0.05 : 0.5 }); rtxMaterials.push(mat);
+const item = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 0.6), mat); item.position.set(x, 1.5, z); item.castShadow = true; item.userData = { type: type }; scene.add(item); powerups.push(item);
 }
 function spawnEnvironment(zPos) {
-const poleGeo = new THREE.CylinderGeometry(0.08, 0.08, 9);
-const poleMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: modRTX ? 0.8 : 0.1 });
-rtxMaterials.push(poleMat);
-const leftPole = new THREE.Mesh(poleGeo, poleMat); leftPole.position.set(-8, 4.5, zPos);
-leftPole.castShadow = true;
-const rightPole = leftPole.clone(); rightPole.position.x = 8;
-scene.add(leftPole, rightPole);
-environmentObjects.push(leftPole, rightPole);
+const poleMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: modRTX ? 0.8 : 0.1 }); rtxMaterials.push(poleMat);
+const leftPole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 9), poleMat); leftPole.position.set(-8, 4.5, zPos); leftPole.castShadow = true;
+const rightPole = leftPole.clone(); rightPole.position.x = 8; scene.add(leftPole, rightPole); environmentObjects.push(leftPole, rightPole);
 }
 function handleKeyDown(e) {
 if (gameState !== "PLAYING") return;
-if (e.key === "ArrowLeft") moveLane(-1);
-if (e.key === "ArrowRight") moveLane(1);
-if (e.key === "ArrowUp") jump();
-if (e.key === "ArrowDown") duck();
+if (e.key === "ArrowLeft") moveLane(-1); if (e.key === "ArrowRight") moveLane(1); if (e.key === "ArrowUp") jump(); if (e.key === "ArrowDown") duck();
 }
-function moveLane(dir) {
-if (gameState !== "PLAYING") return;
-let next = currentTrack + dir;
-if (next >= 0 && next <= 2) currentTrack = next;
-}
+function moveLane(dir) { let next = currentTrack + dir; if (next >= 0 && next <= 2) currentTrack = next; }
 function jump() {
-if (gameState !== "PLAYING") return;
 if (activePowerup === "jetpack" || activePowerup === "skyline" || modFly) return;
-let currentFloor = getFloorLevel();
-if (modInfJumps) {
-isJumping = true;
-jumpVelocity = jumpForce;
-playSound('jump');
-return;
-}
-if (player.position.y <= currentFloor + 0.05 && !isDucking) {
-isJumping = true;
-jumpVelocity = activePowerup === "boots" ? jumpForce * 1.4 : jumpForce;
-playSound('jump');
-}
+let cf = getFloorLevel();
+if (modInfJumps) { isJumping = true; jumpVelocity = jumpForce; playSound('jump'); return; }
+if (player.position.y <= cf + 0.05 && !isDucking) { isJumping = true; jumpVelocity = activePowerup === "boots" ? jumpForce * 1.4 : jumpForce; playSound('jump'); }
 }
 function duck() {
-if (gameState !== "PLAYING") return;
 if (activePowerup === "jetpack" || activePowerup === "skyline" || modFly) return;
-if (isJumping) {
-player.position.y = getFloorLevel();
-isJumping = false;
-jumpVelocity = 0;
-}
-if (!isDucking) {
-isDucking = true;
-duckTimer = 22;
-playSound('duck');
-}
+if (isJumping) { player.position.y = getFloorLevel(); isJumping = false; jumpVelocity = 0; }
+if (!isDucking) { isDucking = true; duckTimer = 22; playSound('duck'); }
 }
 function getFloorLevel() {
-let boxPlayer = new THREE.Box3().setFromObject(torso);
 for (let obs of obstacles) {
-if (obs.userData.type === "train") {
-let boxObs = new THREE.Box3().setFromObject(obs);
-if (Math.abs(player.position.x - obs.position.x) < 1.5) {
-if (player.position.z > obs.position.z - 6 && player.position.z < obs.position.z + 6) {
-return 3.5;
-}
-}
+if (obs.userData.type === "train" && Math.abs(player.position.x - obs.position.x) < 1.5) {
+if (player.position.z > obs.position.z - 6 && player.position.z < obs.position.z + 6) return 3.5;
 }
 }
 return 0;
 }
 function startGame(e) {
-e.stopPropagation();
-initAudio();
-gameState = "PLAYING";
-document.getElementById("menu-screen").style.display = "none";
-document.getElementById("pause-btn").style.display = "flex";
-document.getElementById("touch-controls").style.display = "grid";
+e.stopPropagation(); initAudio(); gameState = "PLAYING";
+document.getElementById("menu-screen").style.display = "none"; document.getElementById("pause-btn").style.display = "flex";
 resetGameTrack();
 }
 function pauseGame(e) {
-e.stopPropagation();
-if (gameState !== "PLAYING") return;
-gameState = "PAUSED";
-document.getElementById("pause-screen").style.display = "flex";
-document.getElementById("touch-controls").style.display = "none";
+e.stopPropagation(); if (gameState !== "PLAYING") return;
+gameState = "PAUSED"; document.getElementById("pause-screen").style.display = "flex";
 }
 function resumeGame(e) {
-e.stopPropagation();
-gameState = "PLAYING";
-document.getElementById("pause-screen").style.display = "none";
-document.getElementById("touch-controls").style.display = "grid";
+e.stopPropagation(); gameState = "PLAYING"; document.getElementById("pause-screen").style.display = "none";
 }
 function quitGame(e) {
-e.stopPropagation();
-gameState = "MENU";
-document.getElementById("pause-screen").style.display = "none";
-document.getElementById("gameover-screen").style.display = "none";
-document.getElementById("menu-screen").style.display = "flex";
-document.getElementById("pause-btn").style.display = "none";
-document.getElementById("touch-controls").style.display = "none";
-document.getElementById("menu-highscore").innerText = highscore;
-resetGameTrack();
+e.stopPropagation(); gameState = "MENU";
+document.getElementById("pause-screen").style.display = "none"; document.getElementById("gameover-screen").style.display = "none";
+document.getElementById("menu-screen").style.display = "flex"; document.getElementById("pause-btn").style.display = "none";
+document.getElementById("menu-highscore").innerText = highscore; resetGameTrack();
 }
 function gameOver() {
 if (invincibilityFrames > 0 || modNoClip) return;
-gameState = "GAMEOVER";
-playSound('crash');
-document.getElementById("pause-btn").style.display = "none";
-document.getElementById("touch-controls").style.display = "none";
-document.getElementById("go-score").innerText = Math.floor(score);
-document.getElementById("respawn-cost").innerText = respawnCost;
+gameState = "GAMEOVER"; playSound('crash'); document.getElementById("pause-btn").style.display = "none";
+document.getElementById("go-score").innerText = Math.floor(score); document.getElementById("respawn-cost").innerText = respawnCost;
 document.getElementById("gameover-screen").style.display = "flex";
-if (totalCoins < respawnCost) {
-document.getElementById("respawn-btn").style.opacity = 0.5;
-document.getElementById("respawn-btn").style.pointerEvents = "none";
-} else {
-document.getElementById("respawn-btn").style.opacity = 1;
-document.getElementById("respawn-btn").style.pointerEvents = "auto";
-}
+if (totalCoins < respawnCost) { document.getElementById("respawn-btn").style.opacity = 0.5; document.getElementById("respawn-btn").style.pointerEvents = "none"; }
+else { document.getElementById("respawn-btn").style.opacity = 1; document.getElementById("respawn-btn").style.pointerEvents = "auto"; }
 }
 function respawn(e) {
 e.stopPropagation();
 if (totalCoins >= respawnCost) {
-if (!modInfCoins) totalCoins -= respawnCost;
-respawnCost *= 2;
-localStorage.setItem("subway_total_coins", totalCoins);
-document.getElementById("ui-total-coins").innerText = totalCoins;
-gameState = "PLAYING";
-document.getElementById("gameover-screen").style.display = "none";
-document.getElementById("pause-btn").style.display = "flex";
-document.getElementById("touch-controls").style.display = "grid";
-invincibilityFrames = 600;
-activePowerup = null;
-player.position.y = 0;
-isJumping = false;
-obstacles.forEach(o => { if (o.position.z > -40) scene.remove(o); });
-obstacles = obstacles.filter(o => o.position.z <= -40);
+if (!modInfCoins) totalCoins -= respawnCost; respawnCost *= 2;
+localStorage.setItem("subway_total_coins", totalCoins); document.getElementById("ui-total-coins").innerText = totalCoins;
+gameState = "PLAYING"; document.getElementById("gameover-screen").style.display = "none"; document.getElementById("pause-btn").style.display = "flex";
+invincibilityFrames = 600; activePowerup = null; player.position.y = 0; isJumping = false;
+obstacles.forEach(o => { if (o.position.z > -40) scene.remove(o); }); obstacles = obstacles.filter(o => o.position.z <= -40);
 }
 }
 function resetGameTrack() {
-obstacles.forEach(o => scene.remove(o));
-coins.forEach(c => scene.remove(c));
-powerups.forEach(p => scene.remove(p));
-obstacles = []; coins = []; powerups = [];
-score = 0; coinsCollectedThisRun = 0; gameTimer = 0;
-speed = baseSpeed; currentTrack = 1; respawnCost = 1;
-invincibilityFrames = 0; activePowerup = null; powerupTime = 0;
-player.position.set(tracks[currentTrack], 0, 0);
-document.getElementById("ui-score").innerText = "00000";
-document.getElementById("ui-coins").innerText = "0";
+obstacles.forEach(o => scene.remove(o)); coins.forEach(c => scene.remove(c)); powerups.forEach(p => scene.remove(p));
+obstacles = []; coins = []; powerups = []; score = 0; coinsCollectedThisRun = 0; gameTimer = 0;
+speed = baseSpeed; currentTrack = 1; respawnCost = 1; invincibilityFrames = 0; activePowerup = null; powerupTime = 0;
+player.position.set(tracks[currentTrack], 0, 0); document.getElementById("ui-score").innerText = "00000"; document.getElementById("ui-coins").innerText = "0";
 updateMods();
 }
 function animate() {
 requestAnimationFrame(animate);
-if (modDisco) {
-discoHue = (discoHue + 0.5) % 360;
-let discoColor = new THREE.Color(hsl(${discoHue}, 70%, 50%));
-scene.background = discoColor;
-scene.fog.color = discoColor;
-}
+if (modDisco) { discoHue = (discoHue + 0.5) % 360; let c = new THREE.Color(hsl(${discoHue}, 70%, 50%)); scene.background = c; scene.fog.color = c; }
 if (gameState === "MENU" && torso) {
-animTime += 0.02;
-torso.position.y = 1.05 + Math.sin(animTime * 2) * 0.05;
-head.rotation.y = Math.sin(animTime) * 0.2;
-leftArm.rotation.x = Math.sin(animTime) * 0.3;
-rightArm.rotation.x = -Math.sin(animTime) * 0.3;
+animTime += 0.02; torso.position.y = 1.05 + Math.sin(animTime * 2) * 0.05; head.rotation.y = Math.sin(animTime) * 0.2;
+leftArm.rotation.x = Math.sin(animTime) * 0.3; rightArm.rotation.x = -Math.sin(animTime) * 0.3;
 }
 if (gameState === "PLAYING" && typeof THREE !== 'undefined') {
-let currentTickSpeed = speed * modSpeedMultiplier;
-gameTimer += (1/60) * modSpeedMultiplier;
-score = gameTimer * 4;
+let tickSpeed = speed * modSpeedMultiplier;
+gameTimer += (1/60) * modSpeedMultiplier; score = gameTimer * 4;
 document.getElementById("ui-score").innerText = Math.floor(score).toString().padStart(5, '0');
-if (score > highscore) {
-highscore = Math.floor(score);
-localStorage.setItem("subway_highscore_points", highscore);
-}
-if (invincibilityFrames > 0) {
-invincibilityFrames--;
-document.getElementById("invincible-flash").style.border = (invincibilityFrames % 10 < 5) ? "4px solid #fff" : "0px solid #000";
-} else {
-document.getElementById("invincible-flash").style.border = "0px solid #000";
-}
+if (score > highscore) { highscore = Math.floor(score); localStorage.setItem("subway_highscore_points", highscore); }
+if (invincibilityFrames > 0) { invincibilityFrames--; document.getElementById("invincible-flash").style.border = (invincibilityFrames % 10 < 5) ? "4px solid #fff" : "0px solid #000"; }
+else { document.getElementById("invincible-flash").style.border = "0px solid #000"; }
 if (activePowerup) {
-powerupTime -= 1/60;
-document.getElementById("active-powerup").style.display = "block";
+powerupTime -= 1/60; document.getElementById("active-powerup").style.display = "block";
 document.getElementById("active-powerup").innerText = activePowerup.toUpperCase() + ": " + Math.ceil(powerupTime) + "s";
-if (powerupTime <= 0) {
-activePowerup = null;
-document.getElementById("active-powerup").style.display = "none";
+if (powerupTime <= 0) { activePowerup = null; document.getElementById("active-powerup").style.display = "none"; }
 }
-}
-targetTrackX = tracks[currentTrack];
-player.position.x = THREE.MathUtils.lerp(player.position.x, targetTrackX, 0.28);
-let floorLevel = getFloorLevel();
-if (activePowerup === "jetpack" || activePowerup === "skyline" || modFly) {
-player.position.y = THREE.MathUtils.lerp(player.position.y, 6.5, 0.1);
-isJumping = false;
-} else {
+player.position.x = THREE.MathUtils.lerp(player.position.x, tracks[currentTrack], 0.28);
+let cf = getFloorLevel();
+if (activePowerup === "jetpack" || activePowerup === "skyline" || modFly) { player.position.y = THREE.MathUtils.lerp(player.position.y, 6.5, 0.1); isJumping = false; }
+else {
 if (isJumping) {
-player.position.y += jumpVelocity;
-jumpVelocity -= gravity;
-if (player.position.y <= floorLevel) {
-player.position.y = floorLevel;
-isJumping = false;
-}
+player.position.y += jumpVelocity; jumpVelocity -= gravity;
+if (player.position.y <= cf) { player.position.y = cf; isJumping = false; }
 } else {
-if (player.position.y > floorLevel) {
-player.position.y -= 0.2;
-if (player.position.y < floorLevel) player.position.y = floorLevel;
-} else if (player.position.y < floorLevel) {
-player.position.y = THREE.MathUtils.lerp(player.position.y, floorLevel, 0.2);
+if (player.position.y > cf) { player.position.y -= 0.2; if (player.position.y < cf) player.position.y = cf; }
+else if (player.position.y < cf) { player.position.y = THREE.MathUtils.lerp(player.position.y, cf, 0.2); }
 }
 }
-}
-if (isDucking) {
-torso.scale.y = THREE.MathUtils.lerp(torso.scale.y, 0.4, 0.3);
-duckTimer--;
-if (duckTimer <= 0) isDucking = false;
-} else {
-torso.scale.y = THREE.MathUtils.lerp(torso.scale.y, 1.0, 0.2);
-}
-if (activePowerup === "jetpack" || activePowerup === "skyline" || modFly) {
-leftLeg.rotation.x = 0.2; rightLeg.rotation.x = -0.2;
-leftArm.rotation.x = Math.PI; rightArm.rotation.x = Math.PI;
-} else if (isJumping) {
-leftLeg.rotation.x = -0.4; rightLeg.rotation.x = -0.4;
-leftArm.rotation.x = 0.5; rightArm.rotation.x = 0.5;
-} else {
-animTime += currentTickSpeed * 0.6;
-leftLeg.rotation.x = Math.sin(animTime) * 0.7;
-rightLeg.rotation.x = -Math.sin(animTime) * 0.7;
-leftArm.rotation.x = -Math.sin(animTime) * 0.7;
-rightArm.rotation.x = Math.sin(animTime) * 0.7;
-}
+if (isDucking) { torso.scale.y = THREE.MathUtils.lerp(torso.scale.y, 0.4, 0.3); duckTimer--; if (duckTimer <= 0) isDucking = false; }
+else { torso.scale.y = THREE.MathUtils.lerp(torso.scale.y, 1.0, 0.2); }
+if (activePowerup === "jetpack" || activePowerup === "skyline" || modFly) { leftLeg.rotation.x = 0.2; rightLeg.rotation.x = -0.2; leftArm.rotation.x = Math.PI; rightArm.rotation.x = Math.PI; }
+else if (isJumping) { leftLeg.rotation.x = -0.4; rightLeg.rotation.x = -0.4; leftArm.rotation.x = 0.5; rightArm.rotation.x = 0.5; }
+else { animTime += tickSpeed * 0.6; leftLeg.rotation.x = Math.sin(animTime) * 0.7; rightLeg.rotation.x = -Math.sin(animTime) * 0.7; leftArm.rotation.x = -Math.sin(animTime) * 0.7; rightArm.rotation.x = Math.sin(animTime) * 0.7; }
 speed += 0.00002;
-let playerBox = new THREE.Box3().setFromObject(torso);
+let pBox = new THREE.Box3().setFromObject(torso);
 for (let i = obstacles.length - 1; i >= 0; i--) {
-let obs = obstacles[i];
-obs.position.z += currentTickSpeed;
-let obsBox = new THREE.Box3().setFromObject(obs);
-if (playerBox.intersectsBox(obsBox) && !modNoClip) {
-if (obs.userData.type === "ramp") {
-player.position.y = floorLevel = 3.5;
-} else if (obs.userData.type === "train") {
-if (player.position.y < 3.0) gameOver();
-} else if (obs.userData.type === "high_barrier") {
-if (!isDucking) gameOver();
-} else {
-gameOver();
-}
+let obs = obstacles[i]; obs.position.z += tickSpeed;
+if (pBox.intersectsBox(new THREE.Box3().setFromObject(obs)) && !modNoClip) {
+if (obs.userData.type === "ramp") { player.position.y = cf = 3.5; }
+else if (obs.userData.type === "train") { if (player.position.y < 3.0) gameOver(); }
+else if (obs.userData.type === "high_barrier") { if (!isDucking) gameOver(); }
+else { gameOver(); }
 }
 if (obs.position.z > 15) { scene.remove(obs); obstacles.splice(i, 1); }
 }
 for (let i = coins.length - 1; i >= 0; i--) {
-let coin = coins[i];
-coin.position.z += currentTickSpeed;
-coin.rotation.z += 0.05;
-if ((activePowerup === "magnet" || modFly) && coin.position.z > -30) {
-coin.position.x = THREE.MathUtils.lerp(coin.position.x, player.position.x, 0.15);
-coin.position.y = THREE.MathUtils.lerp(coin.position.y, player.position.y + 0.5, 0.15);
-}
-let coinBox = new THREE.Box3().setFromObject(coin);
-if (playerBox.intersectsBox(coinBox)) {
-coinsCollectedThisRun++;
-if (!modInfCoins) totalCoins++;
+let c = coins[i]; c.position.z += tickSpeed; c.rotation.z += 0.05;
+if ((activePowerup === "magnet" || modFly) && c.position.z > -30) { c.position.x = THREE.MathUtils.lerp(c.position.x, player.position.x, 0.15); c.position.y = THREE.MathUtils.lerp(c.position.y, player.position.y + 0.5, 0.15); }
+if (pBox.intersectsBox(new THREE.Box3().setFromObject(c))) {
+coinsCollectedThisRun++; if (!modInfCoins) totalCoins++;
 localStorage.setItem("subway_total_coins", totalCoins);
-document.getElementById("ui-coins").innerText = coinsCollectedThisRun;
-document.getElementById("ui-total-coins").innerText = totalCoins;
-playSound('coin');
-scene.remove(coin); coins.splice(i, 1);
-continue;
+document.getElementById("ui-coins").innerText = coinsCollectedThisRun; document.getElementById("ui-total-coins").innerText = totalCoins;
+playSound('coin'); scene.remove(c); coins.splice(i, 1); continue;
 }
-if (coin.position.z > 15) { scene.remove(coin); coins.splice(i, 1); }
+if (c.position.z > 15) { scene.remove(c); coins.splice(i, 1); }
 }
 for (let i = powerups.length - 1; i >= 0; i--) {
-let pu = powerups[i];
-pu.position.z += currentTickSpeed;
-pu.rotation.y += 0.04;
-let puBox = new THREE.Box3().setFromObject(pu);
-if (playerBox.intersectsBox(puBox)) {
-activePowerup = pu.userData.type;
-powerupTime = 10;
-playSound('powerup');
-scene.remove(pu); powerups.splice(i, 1);
-continue;
-}
+let pu = powerups[i]; pu.position.z += tickSpeed; pu.rotation.y += 0.04;
+if (pBox.intersectsBox(new THREE.Box3().setFromObject(pu))) { activePowerup = pu.userData.type; powerupTime = 10; scene.remove(pu); powerups.splice(i, 1); continue; }
 if (pu.position.z > 15) { scene.remove(pu); powerups.splice(i, 1); }
 }
-for (let obj of environmentObjects) {
-obj.position.z += currentTickSpeed;
-if (obj.position.z > 20) obj.position.z = -650;
+for (let obj of environmentObjects) { obj.position.z += tickSpeed; if (obj.position.z > 20) obj.position.z = -650; }
+if (obstacles.length < 15) { let maxZ = obstacles.length > 0 ? Math.min(...obstacles.map(o => o.position.z)) : -50; spawnObstacle(maxZ - (Math.random() * 20 + 30)); }
 }
-if (obstacles.length < 15) {
-let maxZ = obstacles.length > 0 ? Math.min(...obstacles.map(o => o.position.z)) : -50;
-spawnObstacle(maxZ - (Math.random() * 20 + 30));
-}
-}
-if (typeof THREE !== 'undefined' && renderer && (gameState === "PLAYING" || gameState === "MENU")) {
-renderer.render(scene, camera);
-}
+if (typeof THREE !== 'undefined' && renderer) renderer.render(scene, camera);
 }
 function onWindowResize() {
 if (typeof THREE === 'undefined' || !camera) return;
-camera.aspect = window.innerWidth / window.innerHeight;
-camera.updateProjectionMatrix();
-renderer.setSize(window.innerWidth, window.innerHeight);
+camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight);
 }
 </script>
