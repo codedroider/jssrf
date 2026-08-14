@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>jssrf | Mod Menu</title>
+    <title>3D Runner Mod Menu RTX</title>
     <style>
         body { margin: 0; overflow: hidden; background-color: #111; font-family: 'Arial Black', sans-serif; user-select: none; touch-action: none; }
         .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; color: white; background: rgba(0,0,0,0.5); }
@@ -57,7 +57,7 @@
                 <label class="switch"><input type="checkbox" id="mod-inf-coins" onchange="updateMods()"><span class="slider"></span></label>
             </div>
             <div class="mod-row">
-                <span>NoClip (God Mode)</span>
+                <span>NoClip</span>
                 <label class="switch"><input type="checkbox" id="mod-noclip" onchange="updateMods()"><span class="slider"></span></label>
             </div>
             <div class="mod-row">
@@ -295,16 +295,16 @@ let header = document.getElementById("mod-header");
 let isDragging = false;
 let startX, startY, currentX, currentY;
 function dragStart(e) {
-let clientX = e.type === "touchstart" ? e.touches.clientX : e.clientX;
-let clientY = e.type === "touchstart" ? e.touches.clientY : e.clientY;
+let clientX = e.type === "touchstart" ? e.touches[0].clientX : e.clientX;
+let clientY = e.type === "touchstart" ? e.touches[0].clientY : e.clientY;
 isDragging = true;
 startX = clientX - panel.offsetLeft;
 startY = clientY - panel.offsetTop;
 }
 function dragMove(e) {
 if (!isDragging) return;
-let clientX = e.type === "touchmove" ? e.touches.clientX : e.clientX;
-let clientY = e.type === "touchmove" ? e.touches.clientY : e.clientY;
+let clientX = e.type === "touchmove" ? e.touches[0].clientX : e.clientX;
+let clientY = e.type === "touchmove" ? e.touches[0].clientY : e.clientY;
 currentX = clientX - startX;
 currentY = clientY - startY;
 panel.style.left = currentX + "px";
@@ -346,8 +346,8 @@ dirLight.shadow.map = null;
 ambientLight.intensity = 0.3;
 dirLight.intensity = 1.4;
 rtxMaterials.forEach(m => {
-m.roughness = THREE.MathUtils.clamp(m.roughness - 0.3, 0.02, 1.0);
-m.metalness = THREE.MathUtils.clamp(m.metalness + 0.4, 0.0, 1.0);
+m.roughness = 0.05;
+m.metalness = 0.8;
 });
 } else {
 dirLight.shadow.mapSize.width = 512;
@@ -475,7 +475,7 @@ function handleTouchStart(e) {
 let panel = document.getElementById("mod-panel");
 if (panel.contains(e.target)) return;
 if (gameState !== "PLAYING") return;
-let touch = e.touches;
+let touch = e.touches[0];
 touchStartX = touch.clientX;
 touchStartY = touch.clientY;
 }
@@ -488,7 +488,7 @@ function handleTouchEnd(e) {
 let panel = document.getElementById("mod-panel");
 if (panel.contains(e.target)) return;
 if (gameState !== "PLAYING") return;
-let touch = e.changedTouches;
+let touch = e.changedTouches[0];
 let diffX = touch.clientX - touchStartX;
 let diffY = touch.clientY - touchStartY;
 if (Math.abs(diffX) > Math.abs(diffY)) {
@@ -570,7 +570,7 @@ gameState = "MENU";
 document.getElementById("pause-screen").style.display = "none";
 document.getElementById("gameover-screen").style.display = "none";
 document.getElementById("menu-screen").style.display = "flex";
-document.getElementById("pause-btn").style.none;
+document.getElementById("pause-btn").style.display = "none";
 document.getElementById("menu-highscore").innerText = highscore;
 resetGameTrack();
 }
